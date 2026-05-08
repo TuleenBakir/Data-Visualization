@@ -14,27 +14,27 @@ The objective is to uncover data quality issues that impact business insights an
 - Improved dataset reliability for Business Intelligence reporting
 
 ## 🧠 Skills Demonstrated
--Data Cleaning & Preprocessing
--Data Validation & Quality Assessment
--Exploratory Data Analysis (EDA)
--Business Intelligence Thinking
--Data Integrity & Consistency Checks
+- Data Cleaning & Preprocessing
+- Data Validation & Quality Assessment
+- Exploratory Data Analysis (EDA)
+- Business Intelligence Thinking
+- Data Integrity & Consistency Checks
 
 ## 🛠️ Tech Stack
--Python (Pandas, NumPy) 
--Statistical Analysis
--Data Validation Techniques
--BI & Reporting Concepts
+- Python (Pandas, NumPy) 
+- Statistical Analysis
+- Data Validation Techniques
+- BI & Reporting Concepts
 
 ## 🔎Key Data Quality Checks
-✔️ Field Validity → Invalid categorical values
-✔️ Numerical Errors → Negative / zero / impossible values
-✔️ Temporal Issues → Incorrect timestamps & durations
-✔️ Cross-Field Logic → Inconsistent financial calculations
-✔️ Missing Data → Vendor-based missingness
-✔️ Duplicates → Near-duplicate trip detection
+- ✔️ Field Validity → Invalid categorical values
+- ✔️ Numerical Errors → Negative / zero / impossible values
+- ✔️ Temporal Issues → Incorrect timestamps & durations
+- ✔️ Cross-Field Logic → Inconsistent financial calculations
+- ✔️ Missing Data → Vendor-based missingness
+- ✔️ Duplicates → Near-duplicate trip detection
 
-##📂 Project Structure
+## 📂 Project Structure
 
  Project
 
