@@ -17,8 +17,7 @@ The objective is to uncover data quality issues that impact business insights an
 - Data Cleaning & Preprocessing
 - Data Validation & Quality Assessment
 - Exploratory Data Analysis (EDA)
-- Business Intelligence Thinking
-- Data Integrity & Consistency Checks
+
 
 ## 🛠️ Tech Stack
 - Python (Pandas, NumPy) 
@@ -40,8 +39,6 @@ The objective is to uncover data quality issues that impact business insights an
 
 ├── 📄 Data_Quality_Report.pdf
 
-├── 📄 Technical_Preprocessing_Report.pdf
-
 ├── 📁 dataset/
 
 └── 📘 README.md
@@ -53,6 +50,17 @@ A large portion of the dataset contains systematic errors rather than random noi
 👨‍🏫 Supervision
 
 Dr. Osama Abdel Hay
+
+**Team**
+Tuleen Bakir
+
+Anas Gharaibeh
+
+Tala Beirouti
+
+Raneem Mahmoud
+
+Lana Al-Sutari
 
 🎯 Final Note
 
