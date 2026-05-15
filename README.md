@@ -43,15 +43,16 @@ The objective is to uncover data quality issues that impact business insights an
 
 └── 📘 README.md
 
-💡 Key Insight
+##💡 Key Insight
 
 A large portion of the dataset contains systematic errors rather than random noise, emphasizing that data validation is essential before any analysis.
 
-👨‍🏫 Supervision
+## 👨‍🏫 Supervision
 
 Dr. Osama Abdel Hay
 
-**Team**
+## 👥 Team
+
 Tuleen Bakir
 
 Anas Gharaibeh
