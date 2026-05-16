@@ -15,9 +15,9 @@ This project delivers a full-scale data quality assessment, cleaning pipeline, e
 | File | Description |
 |------|-------------|
 | `01_Data_Cleaning.ipynb` | Full cleaning and validation pipeline — raw parquet → clean parquet |
-| `02_Univariate_EDA.ipynb` | Single-variable distributions and summaries (13 figures) |
+| `02_Univariate_EDA.ipynb` | Single-variable distributions and summaries (11 figures) |
 | `03_Bivariate_EDA.ipynb` | Two-variable relationships and correlations (12 figures) |
-| `04_Multivariate_EDA.ipynb` | Three-or-more variable interactions and causal DAGs (11 figures) |
+| `04_Multivariate_EDA.ipynb` | Three-or-more variable interactions and causal DAGs (9 figures) |
 | `dashboard.html` | Interactive executive BI dashboard (9 pages, opens in any browser) |
 | `yellow_taxi_clean.parquet` | Clean dataset — 10.32M rows, 33 columns |
 | `yellow_taxi_flagged_rows.parquet` | Rows carrying data quality flags |
