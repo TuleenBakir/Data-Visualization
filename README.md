@@ -18,12 +18,10 @@ This project delivers a full-scale data quality assessment, cleaning pipeline, e
 | `02_Univariate_EDA.ipynb` | Single-variable distributions and summaries (11 figures) |
 | `03_Bivariate_EDA.ipynb` | Two-variable relationships and correlations (12 figures) |
 | `04_Multivariate_EDA.ipynb` | Three-or-more variable interactions and causal DAGs (9 figures) |
-| `dashboard.html` | Interactive executive BI dashboard (9 pages, opens in any browser) |
+| `dashboard.html` | Interactive executive BI dashboard (opens in any browser) |
 | `yellow_taxi_clean.parquet` | Clean dataset — 10.32M rows, 33 columns |
-| `yellow_taxi_flagged_rows.parquet` | Rows carrying data quality flags |
-| `taxi_flag_log.csv` | Flag-level audit log from the cleaning pipeline |
-| `Project_master_clean.parquet` | Source file as provided by NYC TLC |
 | `OW_Yellow_Caps_Executive_Insights_Report.docx` | Written executive report |
+| `OW_Yellow_Caps_Technical_Insights_Report.docx` | Written Technical report |
 
 ---
 
