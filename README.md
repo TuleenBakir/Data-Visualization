@@ -201,8 +201,6 @@ pip install pandas numpy matplotlib seaborn scikit-learn networkx pyarrow jupyte
 
 - Tuleen Bakir
 - Anas Gharaibeh
-- Tala Beirouti
-- Raneem Mahmoud
-- Lana Al-Sutari
+
 
 **Supervisor:** Dr. Osama Abdel Hay
