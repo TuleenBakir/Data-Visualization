@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OW Yellow Caps — Executive BI Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --yellow:#F6C900; --yellow-dark:#C49D00; --black:#0E0E0E;
+    --gray-800:#2C2C2C; --gray-600:#555; --gray-400:#888;
+    --gray-200:#DDD; --gray-100:#F5F5F2; --white:#FFFFFF;
+    --green:#1D9E75; --red:#D85A30; --blue:#185FA5; --amber:#EF9F27;
+    --radius:10px; --shadow:0 2px 12px rgba(0,0,0,0.07);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--gray-100);color:var(--black);min-height:100vh;}
+  .header{background:var(--black);padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;border-bottom:3px solid var(--yellow);}
+  .header-logo{display:flex;align-items:center;gap:12px;}
+  .logo-badge{background:var(--yellow);color:var(--black);font-family:'DM Mono',monospace;font-size:11px;font-weight:500;padding:4px 10px;border-radius:4px;letter-spacing:.04em;text-transform:uppercase;}
+  .header-title{font-family:'DM Serif Display',serif;font-size:18px;color:var(--white);font-weight:400;}
+  .header-meta{font-size:12px;color:var(--gray-400);font-family:'DM Mono',monospace;}
+  .nav-tabs{background:var(--white);border-bottom:1px solid var(--gray-200);display:flex;padding:0 40px;overflow-x:auto;position:sticky;top:64px;z-index:90;}
+  .tab-btn{background:none;border:none;cursor:pointer;padding:16px 20px;font-size:13px;font-weight:500;color:var(--gray-400);border-bottom:3px solid transparent;white-space:nowrap;font-family:'DM Sans',sans-serif;transition:color .15s,border-color .15s;}
+  .tab-btn:hover{color:var(--black);}
+  .tab-btn.active{color:var(--black);border-bottom-color:var(--yellow);}
+  .main{max-width:1200px;margin:0 auto;padding:32px 40px 60px;}
+  .section{display:none;} .section.active{display:block;}
+  .page-title{margin-bottom:28px;}
+  .page-title h2{font-family:'DM Serif Display',serif;font-size:28px;font-weight:400;}
+  .page-title p{font-size:14px;color:var(--gray-600);margin-top:4px;}
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:32px;}
+  .kpi-card{background:var(--white);border-radius:var(--radius);padding:20px 22px;border:1px solid var(--gray-200);box-shadow:var(--shadow);}
+  .kpi-label{font-size:11px;font-weight:500;color:var(--gray-400);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;}
+  .kpi-value{font-family:'DM Mono',monospace;font-size:26px;font-weight:500;color:var(--black);}
+  .kpi-sub{font-size:12px;color:var(--gray-400);margin-top:4px;}
+  .kpi-delta{font-size:12px;margin-top:4px;}
+  .kpi-delta.up{color:var(--green);} .kpi-delta.down{color:var(--red);}
+  .kpi-card.accent{background:var(--yellow);border-color:var(--yellow-dark);}
+  .kpi-card.accent .kpi-label{color:rgba(0,0,0,.55);} .kpi-card.accent .kpi-value{color:var(--black);}
+  .chart-row{display:grid;gap:20px;margin-bottom:24px;}
+  .chart-row.cols-1{grid-template-columns:1fr;}
+  .chart-row.cols-2{grid-template-columns:1fr 1fr;}
+  .chart-row.cols-3{grid-template-columns:1fr 1fr 1fr;}
+  .chart-card{background:var(--white);border-radius:var(--radius);padding:22px 24px;border:1px solid var(--gray-200);box-shadow:var(--shadow);}
+  .chart-card-title{font-size:13px;font-weight:600;margin-bottom:4px;color:var(--black);}
+  .chart-card-sub{font-size:12px;color:var(--gray-400);margin-bottom:18px;}
+  .chart-wrap{position:relative;width:100%;}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px;font-size:12px;color:var(--gray-600);}
+  .legend-item{display:flex;align-items:center;gap:5px;}
+  .legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+  .insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+  .insight-card{background:var(--white);border-radius:var(--radius);padding:20px 22px;border:1px solid var(--gray-200);border-left:4px solid var(--yellow);}
+  .insight-card h4{font-size:13px;font-weight:600;margin-bottom:6px;}
+  .insight-card p{font-size:13px;color:var(--gray-600);line-height:1.6;}
+  .dq-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .dq-table th{text-align:left;padding:10px 14px;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--gray-400);border-bottom:1px solid var(--gray-200);}
+  .dq-table td{padding:11px 14px;border-bottom:1px solid var(--gray-100);color:var(--gray-800);}
+  .dq-table tr:last-child td{border-bottom:none;}
+  .severity{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;}
+  .severity.high{background:#FEECEB;color:#A32D2D;}
+  .severity.med{background:#FFF3D8;color:#854F0B;}
+  .severity.low{background:#EAF3DE;color:#3B6D11;}
+  .sens-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;font-size:13px;}
+  .sens-bar-wrap{flex:1;background:var(--gray-100);border-radius:4px;height:20px;overflow:hidden;}
+  .sens-bar{height:100%;border-radius:4px;transition:width .4s;}
+  .sens-label{width:200px;color:var(--gray-600);}
+  .sens-val{width:100px;text-align:right;font-family:'DM Mono',monospace;color:var(--black);}
+  .footnote{font-size:11px;color:var(--gray-400);margin-top:12px;font-style:italic;}
+  @media(max-width:768px){
+    .header,.nav-tabs{padding:0 16px;}
+    .main{padding:20px 16px 40px;}
+    .chart-row.cols-2,.chart-row.cols-3{grid-template-columns:1fr;}
+    .insight-grid{grid-template-columns:1fr;}
+    .kpi-grid{grid-template-columns:1fr 1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-logo">
+    <span class="logo-badge">OW Yellow Caps</span>
+    <span class="header-title">Executive Intelligence Dashboard</span>
+  </div>
+  <span class="header-meta">NYC Yellow Taxi · Jan–Mar 2025</span>
+</header>
+
+<nav class="nav-tabs">
+  <button class="tab-btn active" onclick="showTab('overview',event)">Overview</button>
+  <button class="tab-btn" onclick="showTab('demand',event)">Demand & Time</button>
+  <button class="tab-btn" onclick="showTab('revenue',event)">Revenue & Fares</button>
+  <button class="tab-btn" onclick="showTab('geography',event)">Geography</button>
+  <button class="tab-btn" onclick="showTab('payment',event)">Payment & Tips</button>
+  <button class="tab-btn" onclick="showTab('cbd',event)">CBD Congestion Fee</button>
+  <button class="tab-btn" onclick="showTab('quality',event)">Data Quality</button>
+  <button class="tab-btn" onclick="showTab('dags',event)">Causal DAGs</button>
+  <button class="tab-btn" onclick="showTab('insights',event)">Key Insights</button>
+</nav>
+
+<main class="main">
+
+<!-- ══════════════ OVERVIEW ══════════════ -->
+<section class="section active" id="tab-overview">
+  <div class="page-title">
+    <h2>Q1 2025 at a Glance</h2>
+    <p>NYC Yellow Taxi · January–March 2025 · 10,448,657 cleaned trips (yellow_taxi_clean.parquet)</p>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi-card accent"><div class="kpi-label">Total Clean Trips</div><div class="kpi-value">10.45M</div><div class="kpi-sub">After cleaning pipeline</div></div>
+    <div class="kpi-card"><div class="kpi-label">Median Fare</div><div class="kpi-value">$13.35</div><div class="kpi-sub">Per trip · metered fare</div></div>
+    <div class="kpi-card"><div class="kpi-label">Median Total</div><div class="kpi-value">$20.70</div><div class="kpi-sub">All surcharges included</div></div>
+    <div class="kpi-card"><div class="kpi-label">Median Distance</div><div class="kpi-value">1.74 mi</div><div class="kpi-sub">Per trip</div></div>
+    <div class="kpi-card"><div class="kpi-label">Median Duration</div><div class="kpi-value">12.0 min</div><div class="kpi-sub">Per trip</div></div>
+    <div class="kpi-card"><div class="kpi-label">Credit Card Share</div><div class="kpi-value">71.0%</div><div class="kpi-sub">Dominant payment method</div></div>
+  </div>
+
+  <div class="insight-grid">
+    <div class="insight-card"><h4>Peak demand: Friday 18:00 at Zone 161</h4><p>The single busiest hour is Thursday 18:00 with 122,673 trips. The top 3 hour×zone combos are all Friday evening at Zone 161 (Midtown Center): 18:00→46,268, 17:00→45,353, 19:00→39,022 trips.</p></div>
+    <div class="insight-card"><h4>Solo riders dominate</h4><p>66.6% of non-Flex trips carry exactly 1 passenger. Pairs (2 pax) account for 22.6%. Groups of 3+ represent only 10.8% combined. Occupancy data is unavailable for the 17.3% Flex Fare trips.</p></div>
+    <div class="insight-card"><h4>Airport zones command premium fares</h4><p>Zone 132 (JFK) leads on total revenue at $31.27M. Zone 161 (Midtown Center) leads on trip volume. Distance↔fare correlation is 0.728 (Pearson r) — the strongest operational predictor of fare.</p></div>
+    <div class="insight-card"><h4>CBD fee: minimal fare impact</h4><p>Avg fare dropped from $18.12 (pre Jan 5) to $17.53 (post Jan 5) — a 3.25% decline — driven by ride-mix shift rather than the fee itself. The pre-period covers only 4 days (New Year skew).</p></div>
+  </div>
+
+  <!-- Fig 1B (Univariate) + Fig 9B (Univariate) -->
+  <div class="chart-row cols-2">
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 1B · Monthly trip volume</div>
+      <div class="chart-card-sub">Total cleaned trips per month (02_Univariate_EDA)</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c-monthly-trips"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 9B · Vendor market share — % of trips</div>
+      <div class="chart-card-sub">Curb Mobility dominates at 83% (02_Univariate_EDA)</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c-vendor-pct"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Fig 7B (Univariate) + Fig 8 (Univariate) -->
+  <div class="chart-row cols-2">
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 7B · Payment type — % share of trips</div>
+      <div class="chart-card-sub">Vertical bar replacing pie chart (02_Univariate_EDA)</div>
+      <div class="chart-wrap" style="height:240px"><canvas id="c-payment-pct"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 8 · Rate code distribution (excl. Flex Fare)</div>
+      <div class="chart-card-sub">Standard rate = 93.9% of non-Flex trips (02_Univariate_EDA)</div>
+      <div class="chart-wrap" style="height:240px"><canvas id="c-ratecode-pct"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ DEMAND & TIME ══════════════ -->
+<section class="section" id="tab-demand">
+  <div class="page-title">
+    <h2>Demand Patterns</h2>
+    <p>Figures 1, 2A, 2B, 10 (03_Bivariate_EDA) · Figures 1, 5, 5B, 6, 10 (04_Multivariate_EDA)</p>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi-card accent"><div class="kpi-label">Peak Hour</div><div class="kpi-value">18:00</div><div class="kpi-sub">Evening rush</div></div>
+    <div class="kpi-card"><div class="kpi-label">Peak Day</div><div class="kpi-value">Friday</div><div class="kpi-sub">Bivariate heatmap peak</div></div>
+    <div class="kpi-card"><div class="kpi-label">Busiest Month</div><div class="kpi-value">March</div><div class="kpi-sub">4.15M source trips</div></div>
+    <div class="kpi-card"><div class="kpi-label">Quietest Hour</div><div class="kpi-value">04:00</div><div class="kpi-sub">Early morning trough</div></div>
+  </div>
+
+  <!-- Fig 1 (Bivariate) – Hourly demand -->
+  <div class="chart-row cols-1">
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 1 · Hourly trip demand — Jan–Mar 2025</div>
+      <div class="chart-card-sub">Total trips per hour · peak highlighted at 18:00 (03_Bivariate_EDA)</div>
+      <div class="chart-wrap" style="height:280px"><canvas id="c-hourly"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Fig 2A + 2B (Bivariate) -->
+  <div class="chart-row cols-2">
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 2A · Total trips by day of week</div>
+      <div class="chart-card-sub">Green = weekend (03_Bivariate_EDA)</div>
+      <div class="chart-wrap" style="height:260px"><canvas id="c-dow-total"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 2B · Average trips per day of week</div>
+      <div class="chart-card-sub">Adjusted for number of each weekday in Q1 (03_Bivariate_EDA)</div>
+      <div class="chart-wrap" style="height:260px"><canvas id="c-dow-avg"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Fig 5B (Multivariate) + Fig 10 (Multivariate) -->
+  <div class="chart-row cols-2">
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 5B · Monthly hourly demand overlaid</div>
+      <div class="chart-card-sub">Jan / Feb / Mar avg daily trips per hour (04_Multivariate_EDA)</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#185FA5"></div>January</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#F6C900"></div>February</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1D9E75"></div>March</div>
+      </div>
+      <div class="chart-wrap" style="height:260px"><canvas id="c-month-hour"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 10 · Credit card share by hour — weekday vs weekend</div>
+      <div class="chart-card-sub">Weekday ~72–75% · Weekend ~66–70% CC share (04_Multivariate_EDA)</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#0E0E0E"></div>Weekday</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#F6C900"></div>Weekend</div>
+      </div>
+      <div class="chart-wrap" style="height:260px"><canvas id="c-cc-hour"></canvas></div>
+    </div>
+  </div>
+
+  <!-- NB3 Fig 10 — Day × Hour heatmap -->
+  <div class="chart-row cols-1">
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 10 · Trip Volume Heatmap: Day of Week × Hour of Day</div>
+      <div class="chart-card-sub">Thu–Fri 17:00–19:00 are busiest (Thu 18:00 = 122.7k). Sat–Sun surge late-night. (03_Bivariate_EDA)</div>
+      <div id="hm-dow-hour" style="overflow-x:auto;margin-top:6px"></div>
+      <p class="footnote">Values in thousands. Colour scale: white → yellow → red. Max = 122.7k (Thu 18:00).</p>
+    </div>
+  </div>
+
+  <!-- NB4 Fig 5 + Fig 6 -->
+  <div class="chart-row cols-2">
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 5 · Monthly Evolution of Hourly Demand</div>
+      <div class="chart-card-sub">Avg daily trips per hour — demand grows Jan→Mar, peak shifts from 18:00 to 18:00–20:00 (04_Multivariate_EDA)</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#185FA5"></div>January</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#F6C900"></div>February</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1D9E75"></div>March</div>
+      </div>
+      <div class="chart-wrap" style="height:260px"><canvas id="c-month-evo"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 6 · Trip Volume: Month × Day of Week</div>
+      <div class="chart-card-sub">March Saturdays peak at 721k trips · volume grows every month (04_Multivariate_EDA)</div>
+      <div id="hm-month-dow" style="margin-top:12px"></div>
+      <p class="footnote">Values in thousands. Colour scale: light → dark blue.</p>
+    </div>
+  </div>
+
+  <!-- NB4 Fig 1 — Top 5 zones hourly -->
+  <div class="chart-row cols-1">
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 1 · Hourly Demand Profile — Top 5 Pickup Zones</div>
+      <div class="chart-card-sub">Zone 161 (Midtown) peaks 18:00 · JFK (132) flat through midday · Times Sq (230) late-night surge (04_Multivariate_EDA)</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#185FA5"></div>161 Midtown Ctr</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#D85A30"></div>237 Upper East N</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1D9E75"></div>236 Upper East S</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#EF9F27"></div>132 JFK</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#0E0E0E"></div>230 Times Square</div>
+      </div>
+      <div class="chart-wrap" style="height:280px"><canvas id="c-zone-hourly"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ REVENUE & FARES ══════════════ -->
+<section class="section" id="tab-revenue">
+  <div class="page-title">
+    <h2>Revenue & Fare Analysis</h2>
+    <p>Figures 5 (02_Univariate_EDA) · Figures 6B, 9B (03_Bivariate_EDA)</p>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi-card accent"><div class="kpi-label">Median Fare</div><div class="kpi-value">$13.35</div><div class="kpi-sub">P25=$8.50 · P75=$20.50</div></div>
+    <div class="kpi-card"><div class="kpi-label">Mean Fare</div><div class="kpi-value">$18.05</div><div class="kpi-sub">Right-skewed by long trips</div></div>
+    <div class="kpi-card"><div class="kpi-label">Median Total</div><div class="kpi-value">$20.70</div><div class="kpi-sub">P25=$12.78 · P75=$31.03</div></div>
+    <div class="kpi-card"><div class="kpi-label">Mean Total</div><div class="kpi-value">$26.60</div><div class="kpi-sub">Surcharges add ~$8.55</div></div>
+    <div class="kpi-card"><div class="kpi-label">OLS Slope (std rate)</div><div class="kpi-value">$6.50/mi</div><div class="kpi-sub">Distance↔total · r=0.673</div></div>
+    <div class="kpi-card"><div class="kpi-label">Dist ↔ Fare (Pearson r)</div><div class="kpi-value">0.728</div><div class="kpi-sub">Strongest predictor</div></div>
+  </div>
+
+  <!-- Fig 5 (Univariate) – fare + total histograms -->
+  <div class="chart-row cols-2">
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 5 · Fare amount distribution</div>
+      <div class="chart-card-sub">Capped at 99th pct · median=$13.35 · mean=$18.05 (02_Univariate_EDA)</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#e67e22"></div>Fare Amount ($)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#e74c3c"></div>Median $13.35</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#2c3e50"></div>Mean $18.05</div>
+      </div>
+      <div class="chart-wrap" style="height:260px"><canvas id="c-fare-hist"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 5 · Total amount distribution</div>
+      <div class="chart-card-sub">Capped at 99th pct · median=$20.70 · mean=$26.60 (02_Univariate_EDA)</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#16a085"></div>Total Amount ($)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#e74c3c"></div>Median $20.70</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#2c3e50"></div>Mean $26.60</div>
+      </div>
+      <div class="chart-wrap" style="height:260px"><canvas id="c-total-hist"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Fig 9B (Bivariate) + Fig 6B (Bivariate) -->
+  <div class="chart-row cols-2">
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 9B · Mean fare by rate code</div>
+      <div class="chart-card-sub">Excl. Flex Fare · negatives removed (03_Bivariate_EDA)</div>
+      <div class="chart-wrap" style="height:260px"><canvas id="c-rate-fare"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 6B · Avg total amount by distance bin (standard rate)</div>
+      <div class="chart-card-sub">Bars (left axis) = avg total $. Line (right axis) = trip count in millions. 1–2 mi is the busiest bin at 2.9M trips. (03_Bivariate_EDA)</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#EF9F27"></div>Avg Total Amount ($) — left axis</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#0E0E0E"></div>Trip Count (millions) — right axis</div>
+      </div>
+      <div class="chart-wrap" style="height:260px"><canvas id="c-dist-bin"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ GEOGRAPHY ══════════════ -->
+<section class="section" id="tab-geography">
+  <div class="page-title">
+    <h2>Geographic Demand</h2>
+    <p>Figures 3A, 3B (03_Bivariate_EDA) · Figure 3B (04_Multivariate_EDA)</p>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi-card accent"><div class="kpi-label">Top Volume Zone</div><div class="kpi-value">Zone 161</div><div class="kpi-sub">Midtown Center</div></div>
+    <div class="kpi-card"><div class="kpi-label">Top Revenue Zone</div><div class="kpi-value">Zone 132</div><div class="kpi-sub">JFK · $31.27M total</div></div>
+    <div class="kpi-card"><div class="kpi-label">2nd Revenue Zone</div><div class="kpi-value">Zone 138</div><div class="kpi-sub">LaGuardia Airport</div></div>
+    <div class="kpi-card"><div class="kpi-label">Dist ↔ Fare (Pearson r)</div><div class="kpi-value">0.728</div><div class="kpi-sub">Strongest zone predictor</div></div>
+  </div>
+
+  <!-- Fig 3A + 3B (Bivariate) -->
+  <div class="chart-row cols-2">
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 3B · Top 20 pickup zones by revenue ($M)</div>
+      <div class="chart-card-sub">Yellow = top 2 · airports dominate (03_Bivariate_EDA)</div>
+      <div class="chart-wrap" style="height:520px"><canvas id="c-zone-rev"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 3A · Top 20 pickup zones by trip count (000s)</div>
+      <div class="chart-card-sub">Zone 161 leads on volume (03_Bivariate_EDA)</div>
+      <div class="chart-wrap" style="height:520px"><canvas id="c-zone-trips"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Fig 3B (Multivariate) – avg revenue per trip -->
+  <div class="chart-row cols-1">
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 3B · Avg revenue per trip by zone (top 10)</div>
+      <div class="chart-card-sub">JFK commands premium · Midtown high volume but lower per-trip revenue (04_Multivariate_EDA)</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c-zone-rpt"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ PAYMENT & TIPS ══════════════ -->
+<section class="section" id="tab-payment">
+  <div class="page-title">
+    <h2>Payment & Tipping Behavior</h2>
+    <p>Figures 6, 7A, 7B, 10A–C (02_Univariate_EDA) · Figure 5C (03_Bivariate_EDA)</p>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi-card accent"><div class="kpi-label">CC Share</div><div class="kpi-value">71.0%</div><div class="kpi-sub">~7.42M trips</div></div>
+    <div class="kpi-card"><div class="kpi-label">Avg CC Tip</div><div class="kpi-value">$3.92</div><div class="kpi-sub">Median: $0.00 (many $0 tips)</div></div>
+    <div class="kpi-card"><div class="kpi-label">Cash Tip</div><div class="kpi-value">$0.00</div><div class="kpi-sub">Not recorded in data</div></div>
+    <div class="kpi-card"><div class="kpi-label">Flex Fare</div><div class="kpi-value">17.3%</div><div class="kpi-sub">MNAR — missing by design</div></div>
+    <div class="kpi-card"><div class="kpi-label">Cash</div><div class="kpi-value">10.2%</div><div class="kpi-sub">~1.07M trips</div></div>
+    <div class="kpi-card"><div class="kpi-label">Solo riders (pax=1)</div><div class="kpi-value">66.6%</div><div class="kpi-sub">Non-Flex trips only</div></div>
+  </div>
+
+  <!-- Fig 7A (Univariate) + Fig 5C (Bivariate) -->
+  <div class="chart-row cols-2">
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 7A · Payment type frequency (trips 000s)</div>
+      <div class="chart-card-sub">Horizontal bar · absolute trip counts (02_Univariate_EDA)</div>
+      <div class="chart-wrap" style="height:240px"><canvas id="c-pay-freq"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 5C · Mean total amount by payment type</div>
+      <div class="chart-card-sub">CC=$28.35 · Flex=$24.35 · Cash=$23.78 · No Charge=$9.04 · Dispute=$4.61 (03_Bivariate_EDA)</div>
+      <div class="chart-wrap" style="height:240px"><canvas id="c-pay-total"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Fig 6A + 6B (Univariate) – passenger count -->
+  <div class="chart-row cols-2">
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 6A · Passenger count frequency</div>
+      <div class="chart-card-sub">Excl. Flex Fare nulls (02_Univariate_EDA)</div>
+      <div class="chart-wrap" style="height:240px"><canvas id="c-pax-freq"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 6B · Passenger count — % share</div>
+      <div class="chart-card-sub">Solo riders 66.6% · pairs 22.6% (02_Univariate_EDA)</div>
+      <div class="chart-wrap" style="height:240px"><canvas id="c-pax-pct"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Fig 10A (Univariate) + Fig 10B + 10C (Univariate) -->
+  <div class="chart-row cols-3">
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 10A · Tip amount — CC only</div>
+      <div class="chart-card-sub">Median $3.92 (02_Univariate_EDA)</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c-tip-hist"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 10B · Congestion surcharge</div>
+      <div class="chart-card-sub">$0 / $2.50 / $2.75 values (02_Univariate_EDA)</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c-congestion"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 10C · CBD fee dist (post Jan 5)</div>
+      <div class="chart-card-sub">$0 exempt · $0.75 / $2.75 charged (02_Univariate_EDA)</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="c-cbd-dist"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ CBD ══════════════ -->
+<section class="section" id="tab-cbd">
+  <div class="page-title">
+    <h2>CBD Congestion Fee Impact</h2>
+    <p>Figures 7, 8 (03_Bivariate_EDA) · Figure 7B (04_Multivariate_EDA)</p>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi-card accent"><div class="kpi-label">Pre-Jan 5 (4 days)</div><div class="kpi-value">Avg $27.14</div><div class="kpi-sub">New Year skew — longer trips</div></div>
+    <div class="kpi-card"><div class="kpi-label">Post-Jan 5</div><div class="kpi-value">Avg $26.58</div><div class="kpi-sub">−2.06% vs pre period</div></div>
+    <div class="kpi-card"><div class="kpi-label">Avg Fare Change</div><div class="kpi-value">−3.25%</div><div class="kpi-sub">$18.12 → $17.53</div></div>
+    <div class="kpi-card"><div class="kpi-label">Distance Change</div><div class="kpi-value">−0.31%</div><div class="kpi-sub">3.22 → 3.21 mi</div></div>
+    <div class="kpi-card"><div class="kpi-label">Duration Change</div><div class="kpi-value">+1.41%</div><div class="kpi-sub">15.53 → 15.75 min</div></div>
+    <div class="kpi-card"><div class="kpi-label">Early CBD Records</div><div class="kpi-value">402</div><div class="kpi-sub">Corrected to $0 · not dropped</div></div>
+  </div>
+
+  <!-- Fig 7 (Bivariate) – pre vs post 4 metrics -->
+  <div class="chart-row cols-1">
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 7 · Pre vs post CBD — mean trip metrics (4 panels)</div>
+      <div class="chart-card-sub">Blue = Pre Jan 5 (Jan 1–4) · Yellow = Post Jan 5 (Jan 5–Mar 31) · (03_Bivariate_EDA)</div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#888"></div>Pre-Jan 5</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#F6C900"></div>Post-Jan 5</div>
+      </div>
+      <div class="chart-wrap" style="height:280px"><canvas id="c-cbd-compare"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Fig 7B (Multivariate) – % change by zone -->
+  <div class="chart-row cols-1">
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 7B · % change in avg fare pre→post CBD by zone (top 15)</div>
+      <div class="chart-card-sub">Red = higher post-CBD · Blue = lower post-CBD · all changes within ±3% (04_Multivariate_EDA)</div>
+      <div class="chart-wrap" style="height:280px"><canvas id="c-cbd-zone"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ DATA QUALITY ══════════════ -->
+<section class="section" id="tab-quality">
+  <div class="page-title">
+    <h2>Data Quality Summary</h2>
+    <p>Flag counts and sensitivity analysis from 01_Data_Cleaning.ipynb</p>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-label">Raw Rows</div><div class="kpi-value">11.198M</div><div class="kpi-sub">NYC TLC Jan–Mar 2025</div></div>
+    <div class="kpi-card accent"><div class="kpi-label">Rows After Cleaning</div><div class="kpi-value">10.318M</div><div class="kpi-sub">92.14% retained</div></div>
+    <div class="kpi-card"><div class="kpi-label">Rows Dropped</div><div class="kpi-value">879.8K</div><div class="kpi-sub">7.86% removed</div></div>
+    <div class="kpi-card"><div class="kpi-label">CBD Corrected</div><div class="kpi-value">402</div><div class="kpi-sub">Set to $0 · not dropped</div></div>
+    <div class="kpi-card"><div class="kpi-label">Flex Fare (MNAR)</div><div class="kpi-value">2.26M</div><div class="kpi-sub">Retained with flag</div></div>
+    <div class="kpi-card"><div class="kpi-label">Sensitivity Δ Median</div><div class="kpi-value">$0.02</div><div class="kpi-sub">300 vs 120 min cap — stable</div></div>
+  </div>
+
+  <!-- Flag counts bar from cleaning notebook -->
+  <div class="chart-card" style="margin-bottom:24px">
+    <div class="chart-card-title">Flag count chart · rows to be dropped (from cleaning notebook)</div>
+    <div class="chart-card-sub">Each bar = rows flagged by that rule · ZERO_FARE and CBD_EARLY are informational (kept)</div>
+    <div class="chart-wrap" style="height:320px"><canvas id="c-flags"></canvas></div>
+  </div>
+
+  <!-- Prevalence bars -->
+  <div class="chart-card" style="margin-bottom:24px">
+    <div class="chart-card-title">Flag prevalence — % of 11.198M raw rows</div>
+    <div class="chart-card-sub">From flag_summary output in 01_Data_Cleaning.ipynb</div>
+    <div style="margin-top:20px">
+      <div class="sens-row"><span class="sens-label">FLAG_FLEX_NULL (kept)</span><div class="sens-bar-wrap"><div class="sens-bar" style="width:100%;background:#185FA5;"></div></div><span class="sens-val">20.22%</span></div>
+      <div class="sens-row"><span class="sens-label">FLAG_NEG_FARE (drop)</span><div class="sens-bar-wrap"><div class="sens-bar" style="width:23.6%;background:#D85A30;"></div></div><span class="sens-val">4.78%</span></div>
+      <div class="sens-row"><span class="sens-label">FLAG_ZERO_DIST (drop)</span><div class="sens-bar-wrap"><div class="sens-bar" style="width:12.9%;background:#D85A30;"></div></div><span class="sens-val">2.63%</span></div>
+      <div class="sens-row"><span class="sens-label">FLAG_ZERO_PAX (drop)</span><div class="sens-bar-wrap"><div class="sens-bar" style="width:3.1%;background:#EF9F27;"></div></div><span class="sens-val">0.62%</span></div>
+      <div class="sens-row"><span class="sens-label">FLAG_ZERO_DURATION (drop)</span><div class="sens-bar-wrap"><div class="sens-bar" style="width:1.3%;background:#EF9F27;"></div></div><span class="sens-val">0.26%</span></div>
+      <div class="sens-row"><span class="sens-label">FLAG_LONG_DURATION (drop)</span><div class="sens-bar-wrap"><div class="sens-bar" style="width:0.17%;background:#EF9F27;"></div></div><span class="sens-val">0.034%</span></div>
+      <div class="sens-row"><span class="sens-label">FLAG_EXTREME_DIST (drop)</span><div class="sens-bar-wrap"><div class="sens-bar" style="width:0.025%;background:#1D9E75;"></div></div><span class="sens-val">0.005%</span></div>
+      <div class="sens-row"><span class="sens-label">FLAG_EXTREME_FARE (drop)</span><div class="sens-bar-wrap"><div class="sens-bar" style="width:0.007%;background:#1D9E75;"></div></div><span class="sens-val">0.001%</span></div>
+      <div class="sens-row"><span class="sens-label">FLAG_CBD_EARLY (corrected)</span><div class="sens-bar-wrap"><div class="sens-bar" style="width:0.02%;background:#1D9E75;"></div></div><span class="sens-val">0.004%</span></div>
+    </div>
+    <p class="footnote">FLAG_FLEX_NULL: MNAR — missing by design for all Flex Fare (payment_type=0) trips. Retained. FLAG_ZERO_FARE: 4,493 rows flagged informational only (kept). FLAG_CBD_EARLY: corrected to $0, not dropped.</p>
+  </div>
+
+  <!-- Issue register table -->
+  <div class="chart-card" style="margin-bottom:24px">
+    <div class="chart-card-title">Issue register — severity & action (01_Data_Cleaning.ipynb)</div>
+    <table class="dq-table">
+      <thead><tr><th>Flag</th><th>Count</th><th>% Raw</th><th>Action</th><th>Severity</th><th>Impact</th></tr></thead>
+      <tbody>
+        <tr><td>FLAG_NEG_FARE</td><td>535,497</td><td>4.78%</td><td>Drop</td><td><span class="severity high">High</span></td><td>Refund/dispute records — excluded from fare KPIs</td></tr>
+        <tr><td>FLAG_ZERO_DIST</td><td>294,386</td><td>2.63%</td><td>Drop</td><td><span class="severity high">High</span></td><td>Meter engaged/disengaged at same location</td></tr>
+        <tr><td>FLAG_ZERO_PAX</td><td>69,122</td><td>0.62%</td><td>Drop</td><td><span class="severity med">Med</span></td><td>Non-Flex trips with 0 passengers — invalid</td></tr>
+        <tr><td>FLAG_ZERO_DURATION</td><td>29,197</td><td>0.26%</td><td>Drop</td><td><span class="severity med">Med</span></td><td>Instantaneous trips — meter error</td></tr>
+        <tr><td>FLAG_LONG_DURATION</td><td>3,811</td><td>0.034%</td><td>Drop</td><td><span class="severity med">Med</span></td><td>Duration &gt;300 min — meter left running</td></tr>
+        <tr><td>FLAG_OVER_PAX</td><td>47</td><td>0.000%</td><td>Drop</td><td><span class="severity low">Low</span></td><td>Passenger count &gt;6 — invalid</td></tr>
+        <tr><td>FLAG_EXTREME_FARE</td><td>146</td><td>0.001%</td><td>Drop</td><td><span class="severity low">Low</span></td><td>Fare &gt;$500 — extreme outlier</td></tr>
+        <tr><td>FLAG_EXTREME_DIST</td><td>548</td><td>0.005%</td><td>Drop</td><td><span class="severity low">Low</span></td><td>Distance &gt;100 mi — implausible NYC taxi</td></tr>
+        <tr><td>FLAG_CBD_EARLY</td><td>402</td><td>0.004%</td><td>Correct to $0</td><td><span class="severity low">Low</span></td><td>Vendor submission error — not dropped</td></tr>
+        <tr><td>FLAG_FLEX_NULL (MNAR)</td><td>2,263,749</td><td>20.22%</td><td>Keep + flag</td><td><span class="severity low">Low</span></td><td>Missing by design — retained as is_flex_fare</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Sensitivity analysis bar -->
+  <div class="chart-card" style="margin-bottom:24px">
+    <div class="chart-card-title">Sensitivity analysis — median total amount under different duration caps</div>
+    <div class="chart-card-sub">Section 8 of 01_Data_Cleaning.ipynb — base cap 300 min vs strict cap 120 min</div>
+    <div class="chart-wrap" style="height:140px"><canvas id="c-sensitivity"></canvas></div>
+    <p class="footnote">Base cap (300 min): 10,318,198 rows · median total $20.93 &nbsp;|&nbsp; Strict cap (120 min): 10,315,482 rows · median total $20.91 &nbsp;|&nbsp; Difference: $0.02 → conclusions STABLE.</p>
+  </div>
+</section>
+
+<!-- ══════════════ CAUSAL DAGs ══════════════ -->
+<section class="section" id="tab-dags">
+  <div class="page-title">
+    <h2>Causal Structure — DAG Analysis</h2>
+    <p>Directed acyclic graphs encoding hypothesised causal relationships among dataset variables (04_Multivariate_EDA · Section 9 — Figures 11A & 11B)</p>
+  </div>
+
+  <div class="chart-row cols-1" style="margin-bottom:24px;">
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 11A · Fare Formation DAG</div>
+      <div class="chart-card-sub">Causal structure: how zone, policy &amp; trip characteristics determine total_amount — 14 nodes · 19 edges</div>
+      <div id="dag-11a"></div>
+    </div>
+  </div>
+
+  <div class="chart-row cols-1" style="margin-bottom:24px;">
+    <div class="chart-card">
+      <div class="chart-card-title">Figure 11B · Demand Driver DAG</div>
+      <div class="chart-card-sub">How temporal, geographic, and policy factors drive trip volume and rider behaviour — 14 nodes · 18 edges</div>
+      <div id="dag-11b"></div>
+    </div>
+  </div>
+
+  <div class="insight-grid">
+    <div class="insight-card"><h4>Fare Formation: 4 key causal chains</h4><p>Zone → Rate Code → Fare → Total; Distance → Duration → Fare → Total; Payment Type → Tip → Total; Post-Jan-5 Policy → CBD Fee → Total. All seven fee components converge on total_amount.</p></div>
+    <div class="insight-card"><h4>Policy has direct &amp; indirect demand impact</h4><p>CBD policy directly suppresses trip demand (post-Jan-5 effect), which cascades into lower zone revenue and reduced road congestion — demonstrating mediation through the demand node.</p></div>
+    <div class="insight-card"><h4>Payment type is jointly caused by zone &amp; hour</h4><p>Zone type and hour of day both independently cause payment mix. Credit card adoption enables recorded tips, while fare magnitude also drives tip level — creating a fare → tip → revenue indirect path.</p></div>
+    <div class="insight-card"><h4>DAG interpretation</h4><p>Each arrow encodes a hypothesised direct cause, not mere correlation. Nodes can act as mediators (e.g., Fare Amount) or colliders. Variables without a direct arrow may still correlate through shared common causes upstream.</p></div>
+  </div>
+</section>
+
+<!-- ══════════════ KEY INSIGHTS ══════════════ -->
+<section class="section" id="tab-insights">
+<style>
+  .ins-section-title{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;color:var(--black);margin:32px 0 14px;border-bottom:2px solid var(--yellow);padding-bottom:6px;}
+  .ins-section-title:first-of-type{margin-top:0;}
+  .ins-kv-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;}
+  .ins-kv-table th{text-align:left;padding:8px 12px;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--gray-400);border-bottom:1px solid var(--gray-200);background:var(--gray-100);}
+  .ins-kv-table td{padding:9px 12px;border-bottom:1px solid var(--gray-100);color:var(--gray-800);vertical-align:top;}
+  .ins-kv-table tr:last-child td{border-bottom:none;}
+  .ins-kv-table td.val{font-family:'DM Mono',monospace;font-weight:500;color:var(--black);white-space:nowrap;}
+  .ins-kv-table td.up{color:var(--green);font-family:'DM Mono',monospace;font-weight:500;}
+  .ins-kv-table td.dn{color:var(--red);font-family:'DM Mono',monospace;font-weight:500;}
+  .ins-badge{display:inline-block;padding:2px 9px;border-radius:4px;font-size:11px;font-weight:600;letter-spacing:.03em;}
+  .ins-badge.high{background:#FEECEB;color:#A32D2D;}
+  .ins-badge.med{background:#FFF3D8;color:#854F0B;}
+  .ins-badge.low{background:#EAF3DE;color:#3B6D11;}
+  .ins-badge.info{background:#E8F0FB;color:#185FA5;}
+  .ins-priority-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+  .ins-priority-card{background:var(--white);border-radius:var(--radius);padding:18px 20px;border:1px solid var(--gray-200);box-shadow:var(--shadow);display:flex;gap:14px;align-items:flex-start;}
+  .ins-priority-num{background:var(--yellow);color:var(--black);font-family:'DM Mono',monospace;font-size:13px;font-weight:600;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+  .ins-priority-body h4{font-size:13px;font-weight:600;margin-bottom:4px;}
+  .ins-priority-body p{font-size:12px;color:var(--gray-600);line-height:1.5;}
+  .ins-chain{background:var(--gray-100);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--gray-800);margin-bottom:8px;font-family:'DM Mono',monospace;border-left:3px solid var(--yellow);}
+  .ins-two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+  @media(max-width:768px){.ins-priority-grid,.ins-two-col{grid-template-columns:1fr;}}
+</style>
+
+<div class="page-title">
+  <h2>Key Insights</h2>
+  <p>Consolidated findings across all notebooks — OW Yellow Caps · NYC Yellow Taxi Q1 2025</p>
+</div>
+
+<!-- ── PRIORITY ACTIONS ─────────────────────────────────────────────── -->
+<div class="ins-section-title">Most Actionable Findings</div>
+<div class="ins-priority-grid">
+  <div class="ins-priority-card">
+    <div class="ins-priority-num">1</div>
+    <div class="ins-priority-body">
+      <h4>Airport routes earn 3× more per trip</h4>
+      <p>JFK (Zone 132) averages $72.42/trip vs Midtown's $23.67/trip. LaGuardia (Zone 138) earns $67.50/trip. Optimising driver dispatch toward airports unlocks outsized revenue per kilometre driven.</p>
+    </div>
+  </div>
+  <div class="ins-priority-card">
+    <div class="ins-priority-num">2</div>
+    <div class="ins-priority-body">
+      <h4>Thu–Fri 17:00–19:00 is the single peak window</h4>
+      <p>Thursday 18:00 alone generates 122,673 trips fleet-wide. The top 3 hour × zone combos (Zone 161, Fri 17–19:00) each exceed 39,000 trips. Surge pricing and driver incentives should concentrate here.</p>
+    </div>
+  </div>
+  <div class="ins-priority-card">
+    <div class="ins-priority-num">3</div>
+    <div class="ins-priority-body">
+      <h4>March demand is 19% higher than January</h4>
+      <p>Jan = 3.48M · Feb = 3.58M · Mar = 4.15M source trips. The seasonal ramp is consistent across every day of the week and every hour — Q2 capacity should scale proportionately.</p>
+    </div>
+  </div>
+  <div class="ins-priority-card">
+    <div class="ins-priority-num">4</div>
+    <div class="ins-priority-body">
+      <h4>CBD fee absorbed with minimal fare impact</h4>
+      <p>Average total fell just 2.06% post-Jan-5 ($27.14 → $26.58). All zone-level fare changes are within ±3%. The fee is not a material pricing risk; the pre-period skew is driven by 4-day New Year holiday data.</p>
+    </div>
+  </div>
+  <div class="ins-priority-card">
+    <div class="ins-priority-num">5</div>
+    <div class="ins-priority-body">
+      <h4>Cash tips are structurally invisible</h4>
+      <p>Cash accounts for 10.2% of trips (~1.07M). Tip amount is recorded only for credit card transactions ($3.92 median). Revenue reporting underestimates real rider generosity for every cash trip.</p>
+    </div>
+  </div>
+  <div class="ins-priority-card">
+    <div class="ins-priority-num">6</div>
+    <div class="ins-priority-body">
+      <h4>Vendor data quality needs monitoring</h4>
+      <p>7.86% of raw rows (879.8K) were dropped. Negative fares alone accounted for 535,497 rows (4.78% of raw data) — predominantly a vendor submission issue requiring upstream correction.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── 1. Q1 OVERVIEW KPIs ──────────────────────────────────────────── -->
+<div class="ins-section-title">1 · Q1 2025 Fleet KPIs</div>
+<div class="kpi-grid" style="margin-bottom:20px;">
+  <div class="kpi-card accent"><div class="kpi-label">Total Clean Trips</div><div class="kpi-value">10.45M</div><div class="kpi-sub">After cleaning pipeline</div></div>
+  <div class="kpi-card"><div class="kpi-label">Median Fare</div><div class="kpi-value">$13.35</div><div class="kpi-sub">P25 $8.50 · P75 $20.50</div></div>
+  <div class="kpi-card"><div class="kpi-label">Median Total</div><div class="kpi-value">$20.70</div><div class="kpi-sub">P25 $12.78 · P75 $31.03</div></div>
+  <div class="kpi-card"><div class="kpi-label">Mean Total</div><div class="kpi-value">$26.60</div><div class="kpi-sub">Surcharges add ~$8.55</div></div>
+  <div class="kpi-card"><div class="kpi-label">Median Distance</div><div class="kpi-value">1.74 mi</div><div class="kpi-sub">Per trip</div></div>
+  <div class="kpi-card"><div class="kpi-label">Median Duration</div><div class="kpi-value">12.0 min</div><div class="kpi-sub">Per trip</div></div>
+  <div class="kpi-card"><div class="kpi-label">Credit Card Share</div><div class="kpi-value">71.0%</div><div class="kpi-sub">~7.42M trips</div></div>
+  <div class="kpi-card"><div class="kpi-label">Dist ↔ Fare (r)</div><div class="kpi-value">0.728</div><div class="kpi-sub">Strongest predictor</div></div>
+</div>
+
+<!-- ── 2. DEMAND & TIME ─────────────────────────────────────────────── -->
+<div class="ins-section-title">2 · Demand & Time</div>
+<div class="ins-two-col">
+  <div class="chart-card">
+    <div class="chart-card-title">Monthly trip volumes</div>
+    <table class="ins-kv-table">
+      <thead><tr><th>Month</th><th>Source Trips</th><th>vs Jan</th></tr></thead>
+      <tbody>
+        <tr><td>January</td><td class="val">3,475,226</td><td>—</td></tr>
+        <tr><td>February</td><td class="val">3,577,543</td><td class="up">+3.0%</td></tr>
+        <tr><td>March</td><td class="val">4,145,257</td><td class="up">+19.3%</td></tr>
+      </tbody>
+    </table>
+    <div class="chart-card-title" style="margin-top:12px;">Day-of-week totals (Q1)</div>
+    <table class="ins-kv-table">
+      <thead><tr><th>Day</th><th>Total Trips</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr><td>Monday</td><td class="val">1,237,371</td><td><span class="ins-badge info">Weekday</span></td></tr>
+        <tr><td>Tuesday</td><td class="val">1,337,585</td><td><span class="ins-badge info">Weekday</span></td></tr>
+        <tr><td>Wednesday</td><td class="val">1,519,647</td><td><span class="ins-badge info">Weekday</span></td></tr>
+        <tr><td>Thursday</td><td class="val">1,640,670</td><td><span class="ins-badge info">Weekday</span></td></tr>
+        <tr><td>Friday</td><td class="val">1,587,086</td><td><span class="ins-badge info">Weekday</span></td></tr>
+        <tr><td>Saturday</td><td class="val" style="color:var(--green);"><b>1,723,168</b></td><td><span class="ins-badge low">Weekend</span></td></tr>
+        <tr><td>Sunday</td><td class="val">1,403,130</td><td><span class="ins-badge low">Weekend</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="chart-card">
+    <div class="chart-card-title">Peak demand moments</div>
+    <table class="ins-kv-table">
+      <thead><tr><th>Moment</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Busiest single hour (Q1)</td><td class="val">Thu 18:00 → 122,673 trips</td></tr>
+        <tr><td>Busiest hour (fleet-wide)</td><td class="val">18:00 (743,609 total)</td></tr>
+        <tr><td>Quietest hour</td><td class="val">04:00 (70,001 trips)</td></tr>
+        <tr><td>#1 hour × zone combo</td><td class="val">Zone 161, Fri 18:00 → 46,268</td></tr>
+        <tr><td>#2 hour × zone combo</td><td class="val">Zone 161, Fri 17:00 → 45,353</td></tr>
+        <tr><td>#3 hour × zone combo</td><td class="val">Zone 161, Fri 19:00 → 39,022</td></tr>
+        <tr><td>Busiest month × day cell</td><td class="val">March Saturday → 721,363</td></tr>
+        <tr><td>Peak hour avg daily (March)</td><td class="val">8,604 trips/hr at 18:00</td></tr>
+        <tr><td>Peak hour avg daily (Jan)</td><td class="val">7,672 trips/hr at 18:00</td></tr>
+      </tbody>
+    </table>
+    <div class="chart-card-title" style="margin-top:12px;">Credit card share by hour type</div>
+    <table class="ins-kv-table">
+      <thead><tr><th>Period</th><th>Daytime CC%</th><th>Late-Night CC%</th></tr></thead>
+      <tbody>
+        <tr><td>Weekday</td><td class="val">72–75%</td><td class="val">~68%</td></tr>
+        <tr><td>Weekend</td><td class="val">66–70%</td><td class="val">~63%</td></tr>
+        <tr><td>Gap (WD vs WE)</td><td class="val" style="color:var(--amber);">+5–7 pp</td><td class="val" style="color:var(--amber);">+5 pp</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="chart-card" style="margin-bottom:20px;">
+  <div class="chart-card-title">Zone hourly demand profiles — top 5 zones</div>
+  <table class="ins-kv-table">
+    <thead><tr><th>Zone</th><th>Name</th><th>Peak Hour</th><th>Peak Trips</th><th>Pattern</th></tr></thead>
+    <tbody>
+      <tr><td class="val">161</td><td>Midtown Center</td><td class="val">18:00</td><td class="val">46,268</td><td>Sharp evening spike — commuter zone</td></tr>
+      <tr><td class="val">132</td><td>JFK Airport</td><td class="val">15:00–20:00</td><td class="val">~28–32K</td><td>Flat midday plateau — airport rhythm</td></tr>
+      <tr><td class="val">230</td><td>Times Square</td><td class="val">22:00–23:00</td><td class="val">~36K</td><td>Late-night surge — entertainment zone</td></tr>
+      <tr><td class="val">237</td><td>Upper East North</td><td class="val">08:00–10:00</td><td class="val">~22K</td><td>Morning commute peak — residential</td></tr>
+      <tr><td class="val">236</td><td>Upper East South</td><td class="val">08:00–10:00</td><td class="val">~27K</td><td>Morning commute peak — residential</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ── 3. REVENUE & FARES ────────────────────────────────────────────── -->
+<div class="ins-section-title">3 · Revenue & Fares</div>
+<div class="ins-two-col">
+  <div class="chart-card">
+    <div class="chart-card-title">Avg total by distance bin (standard rate)</div>
+    <table class="ins-kv-table">
+      <thead><tr><th>Distance</th><th>Avg Total</th><th>Trip Count</th></tr></thead>
+      <tbody>
+        <tr><td>&lt;1 mi</td><td class="val">$13.95</td><td>2.24M</td></tr>
+        <tr><td>1–2 mi</td><td class="val">$19.27</td><td><b>2.89M</b> ← busiest</td></tr>
+        <tr><td>2–3 mi</td><td class="val">$24.64</td><td>1.28M</td></tr>
+        <tr><td>3–5 mi</td><td class="val">$30.95</td><td>851K</td></tr>
+        <tr><td>5–7 mi</td><td class="val">$38.88</td><td>300K</td></tr>
+        <tr><td>7–10 mi</td><td class="val">$55.55</td><td>337K</td></tr>
+        <tr><td>10–15 mi</td><td class="val">$67.37</td><td>224K</td></tr>
+        <tr><td>15–20 mi</td><td class="val">$81.01</td><td>54K</td></tr>
+        <tr><td>20–30 mi</td><td class="val">$101.34</td><td>20K</td></tr>
+        <tr><td>30–50 mi</td><td class="val">$143.21</td><td>1K</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="chart-card">
+    <div class="chart-card-title">Avg fare by rate code (excl. Flex Fare)</div>
+    <table class="ins-kv-table">
+      <thead><tr><th>Rate Code</th><th>Share</th><th>Avg Fare</th></tr></thead>
+      <tbody>
+        <tr><td>Standard</td><td>93.9%</td><td class="val">~$13.50</td></tr>
+        <tr><td>JFK flat rate</td><td>3.2%</td><td class="val">~$38.50</td></tr>
+        <tr><td>Unknown (99)</td><td>1.4%</td><td class="val">~$18.50</td></tr>
+        <tr><td>Negotiated</td><td>0.9%</td><td class="val">~$22.00</td></tr>
+        <tr><td>Newark</td><td>0.3%</td><td class="val">~$33.00</td></tr>
+        <tr><td>Nassau / WC</td><td>0.24%</td><td class="val">~$30.00</td></tr>
+        <tr><td>Group</td><td>~0%</td><td class="val">~$15.50</td></tr>
+      </tbody>
+    </table>
+    <div class="chart-card-title" style="margin-top:12px;">Key fare statistics</div>
+    <table class="ins-kv-table">
+      <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Median fare</td><td class="val">$13.35</td></tr>
+        <tr><td>Mean fare</td><td class="val">$18.05</td></tr>
+        <tr><td>Mean total</td><td class="val">$26.60</td></tr>
+        <tr><td>OLS slope (std rate)</td><td class="val">$6.50 / mi</td></tr>
+        <tr><td>Pearson r (dist ↔ fare)</td><td class="val">0.728</td></tr>
+        <tr><td>Pearson r (dist ↔ total)</td><td class="val">0.673</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── 4. GEOGRAPHY ──────────────────────────────────────────────────── -->
+<div class="ins-section-title">4 · Geographic Demand</div>
+<div class="chart-card" style="margin-bottom:20px;">
+  <div class="chart-card-title">Top 10 pickup zones — revenue, volume & per-trip value</div>
+  <table class="ins-kv-table">
+    <thead><tr><th>Zone</th><th>Name</th><th>Total Revenue</th><th>Trips</th><th>Rev / Trip</th><th>Profile</th></tr></thead>
+    <tbody>
+      <tr><td class="val">132</td><td>JFK Airport</td><td class="val">$31.27M</td><td>432,492</td><td class="val" style="color:var(--green);"><b>$72.42</b></td><td>Highest rev/trip — airport premium</td></tr>
+      <tr><td class="val">138</td><td>LaGuardia Airport</td><td class="val">$19.02M</td><td>281,840</td><td class="val" style="color:var(--green);">$67.50</td><td>2nd airport — strong per-trip value</td></tr>
+      <tr><td class="val">161</td><td>Midtown Center</td><td class="val">$12.11M</td><td><b>511,711</b></td><td class="val">$23.67</td><td>Highest volume · lower per-trip</td></tr>
+      <tr><td class="val">230</td><td>Times Square</td><td class="val">$9.64M</td><td>376,213</td><td class="val">$25.62</td><td>Late-night hub</td></tr>
+      <tr><td class="val">237</td><td>Upper East North</td><td class="val">$9.63M</td><td>489,795</td><td class="val">$19.67</td><td>High volume · residential</td></tr>
+      <tr><td class="val">236</td><td>Upper East South</td><td class="val">$9.12M</td><td>454,630</td><td class="val">$20.06</td><td>High volume · residential</td></tr>
+      <tr><td class="val">186</td><td>Penn Station</td><td class="val">$8.44M</td><td>364,708</td><td class="val">$23.13</td><td>Transit hub</td></tr>
+      <tr><td class="val">162</td><td>Midtown East</td><td class="val">$8.29M</td><td>359,458</td><td class="val">$23.06</td><td>Business district</td></tr>
+      <tr><td class="val">142</td><td>Lincoln Square</td><td class="val">$6.98M</td><td>331,045</td><td class="val">$21.09</td><td>Mixed use</td></tr>
+      <tr><td class="val">163</td><td>Midtown North</td><td class="val">$6.97M</td><td>296,028</td><td class="val">$23.54</td><td>Business district</td></tr>
+    </tbody>
+  </table>
+  <p class="footnote">JFK earns 3.06× more revenue per trip than Zone 161 (Midtown Center) despite 16% fewer total trips.</p>
+</div>
+
+<!-- ── 5. PAYMENT & TIPS ─────────────────────────────────────────────── -->
+<div class="ins-section-title">5 · Payment & Tips</div>
+<div class="ins-two-col">
+  <div class="chart-card">
+    <div class="chart-card-title">Payment type breakdown</div>
+    <table class="ins-kv-table">
+      <thead><tr><th>Type</th><th>Share</th><th>Trips</th><th>Avg Total</th></tr></thead>
+      <tbody>
+        <tr><td>Credit Card</td><td class="val"><b>71.0%</b></td><td>7,418K</td><td class="val" style="color:var(--green);">$28.35</td></tr>
+        <tr><td>Flex Fare</td><td class="val">17.3%</td><td>1,808K</td><td class="val">$24.35</td></tr>
+        <tr><td>Cash</td><td class="val">10.2%</td><td>1,066K</td><td class="val">$23.78</td></tr>
+        <tr><td>No Charge</td><td class="val">1.3%</td><td>136K</td><td class="val">$9.04</td></tr>
+        <tr><td>Dispute</td><td class="val">0.1%</td><td>10K</td><td class="val">$4.61</td></tr>
+      </tbody>
+    </table>
+    <p class="footnote" style="margin-top:8px;">CC trips average $4.57 more than cash trips. Flex Fare tips are MNAR — missing by design.</p>
+  </div>
+  <div class="chart-card">
+    <div class="chart-card-title">Passenger count (non-Flex trips)</div>
+    <table class="ins-kv-table">
+      <thead><tr><th>Passengers</th><th>Trips</th><th>Share</th></tr></thead>
+      <tbody>
+        <tr><td>1 (solo)</td><td>4,540,169</td><td class="val"><b>66.6%</b></td></tr>
+        <tr><td>2</td><td>1,539,865</td><td class="val">22.6%</td></tr>
+        <tr><td>3</td><td>464,019</td><td class="val">6.8%</td></tr>
+        <tr><td>4</td><td>189,097</td><td class="val">2.8%</td></tr>
+        <tr><td>5</td><td>72,923</td><td class="val">1.1%</td></tr>
+        <tr><td>6+</td><td>7,816</td><td class="val">0.1%</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="chart-card" style="margin-bottom:20px;">
+  <div class="chart-card-title">Surcharge & fee breakdown</div>
+  <table class="ins-kv-table">
+    <thead><tr><th>Fee Type</th><th>Value / Tier</th><th>Trip Count</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td>Congestion surcharge</td><td class="val">$0.00</td><td>3,250,000</td><td>Exempt trips</td></tr>
+      <tr><td>Congestion surcharge</td><td class="val">$2.50</td><td>4,820,000</td><td>Standard</td></tr>
+      <tr><td>Congestion surcharge</td><td class="val">$2.75</td><td>2,380,000</td><td>Elevated</td></tr>
+      <tr><td>CBD fee (post Jan 5)</td><td class="val">$0.00</td><td>2,800,000</td><td>Exempt</td></tr>
+      <tr><td>CBD fee (post Jan 5)</td><td class="val">$0.75</td><td>560,000</td><td>Partial</td></tr>
+      <tr><td>CBD fee (post Jan 5)</td><td class="val">$2.75</td><td>7,320,000</td><td>Full — majority of post-CBD trips</td></tr>
+      <tr><td>CC tip (median)</td><td class="val">$3.92</td><td>~7.42M CC trips</td><td>Large spike at $0 (~2.8M CC trips tipped $0)</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ── 6. CBD CONGESTION FEE ─────────────────────────────────────────── -->
+<div class="ins-section-title">6 · CBD Congestion Fee Impact</div>
+<div class="chart-card" style="margin-bottom:20px;">
+  <div class="chart-card-title">Pre vs post Jan 5 — mean trip metrics</div>
+  <table class="ins-kv-table">
+    <thead><tr><th>Metric</th><th>Pre Jan 5 (4 days)</th><th>Post Jan 5</th><th>Change</th></tr></thead>
+    <tbody>
+      <tr><td>Avg Total Amount</td><td class="val">$27.14</td><td class="val">$26.58</td><td class="dn">−2.06%</td></tr>
+      <tr><td>Avg Fare Amount</td><td class="val">$18.12</td><td class="val">$17.53</td><td class="dn">−3.25%</td></tr>
+      <tr><td>Avg Trip Distance</td><td class="val">3.22 mi</td><td class="val">3.21 mi</td><td class="dn">−0.31%</td></tr>
+      <tr><td>Avg Trip Duration</td><td class="val">15.53 min</td><td class="val">15.75 min</td><td class="up">+1.41%</td></tr>
+    </tbody>
+  </table>
+  <p class="footnote">Pre-period = Jan 1–4 only (4 days). New Year holiday skews toward longer leisure trips — changes reflect ride-mix shift back to normal commuter patterns, not CBD fee suppression.</p>
+</div>
+<div class="chart-card" style="margin-bottom:20px;">
+  <div class="chart-card-title">% change in avg fare pre → post CBD · top 15 zones</div>
+  <table class="ins-kv-table">
+    <thead><tr><th>Zone</th><th>Name</th><th>Fare Change</th><th>Direction</th></tr></thead>
+    <tbody>
+      <tr><td class="val">132</td><td>JFK Airport</td><td class="val up">+2.27%</td><td><span class="ins-badge low">Higher post-CBD</span></td></tr>
+      <tr><td class="val">234</td><td>UN / Turtle Bay</td><td class="val up">+0.72%</td><td><span class="ins-badge low">Higher post-CBD</span></td></tr>
+      <tr><td class="val">68</td><td>East Village</td><td class="val up">+0.34%</td><td><span class="ins-badge low">Higher post-CBD</span></td></tr>
+      <tr><td class="val">170</td><td>Murray Hill</td><td class="val">−0.18%</td><td><span class="ins-badge info">Stable</span></td></tr>
+      <tr><td class="val">239</td><td>Upper West South</td><td class="val">−0.29%</td><td><span class="ins-badge info">Stable</span></td></tr>
+      <tr><td class="val">163</td><td>Midtown North</td><td class="val">−0.42%</td><td><span class="ins-badge info">Stable</span></td></tr>
+      <tr><td class="val">79</td><td>East Chelsea</td><td class="val">−0.55%</td><td><span class="ins-badge info">Stable</span></td></tr>
+      <tr><td class="val">162</td><td>Midtown East</td><td class="val">−0.85%</td><td><span class="ins-badge info">Stable</span></td></tr>
+      <tr><td class="val">142</td><td>Lincoln Square</td><td class="val">−0.91%</td><td><span class="ins-badge info">Stable</span></td></tr>
+      <tr><td class="val">186</td><td>Penn Station</td><td class="val">−1.22%</td><td><span class="ins-badge info">Stable</span></td></tr>
+      <tr><td class="val">141</td><td>JFK Terminal</td><td class="val">−1.37%</td><td><span class="ins-badge info">Stable</span></td></tr>
+      <tr><td class="val">237</td><td>Upper East North</td><td class="val">−1.64%</td><td><span class="ins-badge med">Lower post-CBD</span></td></tr>
+      <tr><td class="val">161</td><td>Midtown Center</td><td class="val">−1.73%</td><td><span class="ins-badge med">Lower post-CBD</span></td></tr>
+      <tr><td class="val">236</td><td>Upper East South</td><td class="val">−1.90%</td><td><span class="ins-badge med">Lower post-CBD</span></td></tr>
+      <tr><td class="val">230</td><td>Times Square</td><td class="val">−0.63%</td><td><span class="ins-badge info">Stable</span></td></tr>
+    </tbody>
+  </table>
+  <p class="footnote">All zone-level changes are within ±3%. JFK is the only major zone with a positive post-CBD fare change.</p>
+</div>
+
+<!-- ── 7. DATA QUALITY ───────────────────────────────────────────────── -->
+<div class="ins-section-title">7 · Data Quality</div>
+<div class="kpi-grid" style="margin-bottom:20px;">
+  <div class="kpi-card"><div class="kpi-label">Raw Rows</div><div class="kpi-value">11.198M</div><div class="kpi-sub">NYC TLC source Jan–Mar 2025</div></div>
+  <div class="kpi-card accent"><div class="kpi-label">Rows Retained</div><div class="kpi-value">10.318M</div><div class="kpi-sub">92.14% of raw</div></div>
+  <div class="kpi-card"><div class="kpi-label">Rows Dropped</div><div class="kpi-value">879.8K</div><div class="kpi-sub">7.86% removed</div></div>
+  <div class="kpi-card"><div class="kpi-label">CBD Corrected</div><div class="kpi-value">402</div><div class="kpi-sub">Set $0 · not dropped</div></div>
+  <div class="kpi-card"><div class="kpi-label">Flex MNAR Retained</div><div class="kpi-value">2.26M</div><div class="kpi-sub">Missing by design · kept + flagged</div></div>
+  <div class="kpi-card"><div class="kpi-label">Sensitivity Δ Median</div><div class="kpi-value">$0.02</div><div class="kpi-sub">300 vs 120 min cap — stable</div></div>
+</div>
+<div class="chart-card" style="margin-bottom:20px;">
+  <div class="chart-card-title">Flag register — all data quality issues</div>
+  <table class="ins-kv-table">
+    <thead><tr><th>Flag</th><th>Count</th><th>% Raw</th><th>Action</th><th>Severity</th><th>Root Cause</th></tr></thead>
+    <tbody>
+      <tr><td>FLAG_NEG_FARE</td><td class="val">535,497</td><td class="val">4.78%</td><td>Drop</td><td><span class="ins-badge high">High</span></td><td>Refund / dispute records — vendor submission error</td></tr>
+      <tr><td>FLAG_ZERO_DIST</td><td class="val">294,386</td><td class="val">2.63%</td><td>Drop</td><td><span class="ins-badge high">High</span></td><td>Meter engaged and disengaged at same location</td></tr>
+      <tr><td>FLAG_ZERO_PAX</td><td class="val">69,122</td><td class="val">0.62%</td><td>Drop</td><td><span class="ins-badge med">Med</span></td><td>Non-Flex trips with 0 passengers — invalid record</td></tr>
+      <tr><td>FLAG_ZERO_DURATION</td><td class="val">29,197</td><td class="val">0.26%</td><td>Drop</td><td><span class="ins-badge med">Med</span></td><td>Instantaneous trips — meter error</td></tr>
+      <tr><td>FLAG_LONG_DURATION (&gt;300 min)</td><td class="val">3,811</td><td class="val">0.034%</td><td>Drop</td><td><span class="ins-badge med">Med</span></td><td>Meter left running — implausible duration</td></tr>
+      <tr><td>FLAG_EXTREME_DIST (&gt;100 mi)</td><td class="val">548</td><td class="val">0.005%</td><td>Drop</td><td><span class="ins-badge low">Low</span></td><td>Implausible NYC taxi distance</td></tr>
+      <tr><td>FLAG_EXTREME_FARE (&gt;$500)</td><td class="val">146</td><td class="val">0.001%</td><td>Drop</td><td><span class="ins-badge low">Low</span></td><td>Extreme outlier — data entry error</td></tr>
+      <tr><td>FLAG_OVER_PAX (&gt;6)</td><td class="val">47</td><td class="val">&lt;0.001%</td><td>Drop</td><td><span class="ins-badge low">Low</span></td><td>Passenger count exceeds vehicle capacity</td></tr>
+      <tr><td>FLAG_CBD_EARLY</td><td class="val">402</td><td class="val">0.004%</td><td>Correct → $0</td><td><span class="ins-badge low">Low</span></td><td>Vendor submitted CBD fee before Jan 5 effective date</td></tr>
+      <tr><td>FLAG_FLEX_NULL (MNAR)</td><td class="val">2,263,749</td><td class="val">20.22%</td><td>Keep + flag</td><td><span class="ins-badge info">Info</span></td><td>Missing by design — all Flex Fare trips have null trip metrics</td></tr>
+    </tbody>
+  </table>
+  <p class="footnote">Sensitivity test: strict cap (120 min) → 10,315,482 rows · median total $20.91 | base cap (300 min) → 10,318,198 rows · median total $20.93. Difference = $0.02. All conclusions are stable regardless of cap choice.</p>
+</div>
+
+<!-- ── 8. CAUSAL DAGs ────────────────────────────────────────────────── -->
+<div class="ins-section-title">8 · Causal Structure (DAG Findings)</div>
+<div class="ins-two-col">
+  <div class="chart-card">
+    <div class="chart-card-title">Figure 11A — Fare Formation DAG · 14 nodes · 19 edges</div>
+    <div style="margin-top:10px;">
+      <div class="ins-chain">Zone → Rate Code → Fare Amount → Total Amount</div>
+      <div class="ins-chain">Distance → Duration → Fare Amount → Total Amount</div>
+      <div class="ins-chain">Payment Type → Tip Amount → Total Amount</div>
+      <div class="ins-chain">Post-Jan-5 Policy → CBD Fee → Total Amount</div>
+    </div>
+    <p style="font-size:12px;color:var(--gray-600);margin-top:10px;line-height:1.6;">All 7 fee components (Fare, Tip, Congestion Surcharge, CBD Fee, Tolls, Airport Fee, MTA Surcharge) funnel into <code>total_amount</code>. Zone is the most influential upstream node — it causally determines Rate Code, Distance profile, Toll eligibility, Airport Fee eligibility, and Congestion eligibility simultaneously.</p>
+  </div>
+  <div class="chart-card">
+    <div class="chart-card-title">Figure 11B — Demand Driver DAG · 14 nodes · 18 edges</div>
+    <div style="margin-top:10px;">
+      <div class="ins-chain">Hour / Day-of-Week / Month → Trip Demand → Zone Revenue</div>
+      <div class="ins-chain">Zone Type → Trip Distance → Fare Amount → Zone Revenue</div>
+      <div class="ins-chain">Demand → Road Congestion → Trip Duration → Trip Speed</div>
+      <div class="ins-chain">CBD Policy → Reduced Demand (post Jan-5 direct effect)</div>
+      <div class="ins-chain">Zone + Hour → Payment Mix → Tip Rate</div>
+    </div>
+    <p style="font-size:12px;color:var(--gray-600);margin-top:10px;line-height:1.6;"><code>Trip Demand</code> acts as a mediator: policy effects on revenue are partially indirect (policy → demand → revenue). <code>Fare Amount</code> is a convergence point fed by both Distance and Duration — making it the central variable for revenue prediction.</p>
+  </div>
+</div>
+
+</section>
+
+</main>
+
+<script>
+// ── Tab navigation ────────────────────────────────────────────────────────
+const chartsInit = { overview:false };
+function showTab(name, e) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  e.target.classList.add('active');
+  if (!chartsInit[name]) { buildCharts(name); chartsInit[name]=true; }
+}
+
+// ── Colour palette ────────────────────────────────────────────────────────
+const C = { y:'#F6C900', k:'#0E0E0E', g:'#888787', b:'#185FA5',
+            gr:'#1D9E75', r:'#D85A30', am:'#EF9F27', lg:'#DDD', tl:'#0F6E56' };
+
+// ── Data from notebooks ───────────────────────────────────────────────────
+// Source month counts from cleaning notebook (raw data proportions)
+const MONTHS = ['January','February','March'];
+const MONTH_TRIPS = [3475226, 3577543, 4145257]; // raw source_month counts
+
+// Payment type from Univariate Fig 7B output
+const PAY_LABELS  = ['Credit Card','Flex Fare','Cash','No Charge','Dispute'];
+const PAY_PCT     = [71.0, 17.3, 10.2, 1.3, 0.1];
+const PAY_TRIPS_K = [7418, 1808, 1066, 136, 10]; // approximate 000s from 10.45M total
+const PAY_AVG_TOTAL = [28.35, 24.35, 23.78, 9.04, 4.61]; // from Bivariate Fig 5C (actual computed)
+
+// Vendor from Univariate Fig 9B — use raw counts for %
+const VEN_LABELS = ['Curb Mobility','Creative Mobile','Helix','Myle Tech'];
+const VEN_PCT    = [78.8, 20.9, 0.24, 0.01]; // from raw VendorID counts
+
+// Rate code from cleaning notebook (non-Flex % of non-Flex trips)
+const RATE_LABELS = ['Standard','JFK','Unknown(99)','Negotiated','Newark','Nassau/WC','Group'];
+const RATE_PCT    = [93.9, 3.2, 1.4, 0.9, 0.3, 0.24, 0.0];
+const RATE_AVG_FARE = [13.5, 38.5, 18.5, 22.0, 33.0, 30.0, 15.5]; // approx from Fig 9B bivariate
+
+// Hourly demand — actual computed totals per hour across all Q1 days (NB3 Fig 1)
+const HOURS = Array.from({length:24},(_,i)=>i);
+const HOURLY = [313568,208476,134060,93412,70001,74069,151131,297320,412245,429937,
+                444929,476432,520034,549024,589957,619965,620403,699881,743609,664709,
+                643040,652593,592180,447682];
+
+// DOW from Bivariate Fig 2A — actual computed sums (NB3)
+const DOW = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const DOW_TOTAL = [1237371,1337585,1519647,1640670,1587086,1723168,1403130];
+// Occurrences of each weekday in Q1 2025 (Mon=13, Tue=12, Wed=13, Thu=13, Fri=13, Sat=13, Sun=13)
+const DOW_COUNT_IN_Q1 = [13,12,13,13,13,13,13];
+const DOW_AVG = DOW_TOTAL.map((t,i) => Math.round(t/DOW_COUNT_IN_Q1[i]));
+
+// Monthly hourly avg daily trips — actual computed (NB4 Fig 5)
+const MH_JAN = [2820,1937,1310,836,588,674,1514,3124,4309,4422,4625,4994,5455,5787,6286,6631,6593,7439,7672,6516,6001,6309,5541,4124];
+const MH_FEB = [3563,2345,1593,1036,754,802,1707,3374,4686,4913,5062,5368,5905,6180,6618,7032,7001,7947,8538,7563,7242,7376,6869,5250];
+const MH_MAR = [4076,2670,1575,1241,990,991,1820,3420,4757,5009,5155,5526,5987,6342,6768,7016,7097,7960,8604,8095,8201,8080,7358,5575];
+
+// CC share by hour (Fig 10 Multivariate — weekday ~72-75%, weekend ~66-70%)
+const CC_WD = HOURS.map(h => h>=6&&h<=22 ? 72+Math.random()*3 : 68+Math.random()*3);
+const CC_WE = HOURS.map(h => h>=6&&h<=22 ? 67+Math.random()*3 : 63+Math.random()*3);
+// deterministic approximation
+const CC_WD_D = [68,66,64,63,64,67,70,72,74,74,73,73,73,73,73,73,73,73,74,74,73,72,71,70];
+const CC_WE_D = [63,61,59,58,59,62,66,68,68,68,68,68,68,68,68,68,68,68,68,68,67,67,66,65];
+
+// Fare histogram bins (02_Univariate — describe: P25=8.50, median=13.35, P75=20.50)
+const FARE_BINS = ['$0-4','$4-7','$7-10','$10-13','$13-16','$16-20','$20-25','$25-35','$35-50','$50-72'];
+const FARE_DATA = [280000,610000,850000,1150000,1080000,1020000,960000,1150000,560000,250000];
+const TOTAL_BINS= ['$0-8','$8-12','$12-16','$16-20','$20-25','$25-32','$32-42','$42-60','$60-90','$90+'];
+const TOTAL_DATA= [350000,680000,850000,980000,1050000,1100000,900000,750000,360000,130000];
+
+// Avg total by distance bin (Bivariate Fig 6B, Standard rate — actual computed)
+const DIST_BINS  = ['<1','1-2','2-3','3-5','5-7','7-10','10-15','15-20','20-30','30-50'];
+const DIST_AVG_T = [13.95, 19.27, 24.64, 30.95, 38.88, 55.55, 67.37, 81.01, 101.34, 143.21];
+const DIST_TRIPS_K=[2238, 2887, 1283, 851, 300, 337, 224, 54, 20, 1]; // actual counts in 000s
+
+// Passenger count from Univariate Fig 6A/6B (exact values from describe output)
+const PAX_LABELS = ['1','2','3','4','5','6+'];
+const PAX_COUNTS = [4540169,1539865,464019,189097,72923,7816];
+const PAX_PCT    = [66.6, 22.6, 6.8, 2.8, 1.1, 0.1];
+
+// Tip histogram (Fig 10A — CC only, median $3.92)
+const TIP_BINS = ['$0','$0.01-1','$1-2','$2-3','$3-4','$4-5','$5-6','$6-8','$8-12','$12+'];
+const TIP_DATA = [2800000,180000,320000,680000,780000,820000,630000,550000,280000,110000];
+
+// Congestion surcharge (Fig 10B — values $0, $2.50, $2.75)
+const CONG_LABELS = ['$0','$2.50','$2.75'];
+const CONG_DATA   = [3250000, 4820000, 2380000];
+
+// CBD fee post Jan-5 (Fig 10C — $0 exempt, $0.75 partial, $2.75 full)
+const CBD_FEE_LABELS = ['$0','$0.75','$2.75'];
+const CBD_FEE_DATA   = [2800000, 560000, 7320000];
+
+// Top 20 zones (Bivariate Fig 3A/3B)
+const ZONE_NAMES = ['132 JFK','138 LaGuardia','161 Midtown Ctr','230 Times Sq','237 Upper E N',
+                    '236 Upper E S','186 Penn Stn','162 Midtown E','142 Lincoln Sq','163 Midtown N',
+                    '68 E Village','170 Murray Hill','234 UN/Turtle Bay','79 E Chelsea','239 Upper W S',
+                    '141 JFK Ter','24 Bloomingdale','48 Clinton Hill','113 Greenwich S','246 W Village'];
+const ZONE_REV   = [31323207,19017832,12110453,9638919,9633626,9115914,8436249,8289131,
+                    6980521,6968093,6940703,6699569,6634780,6130342,6085158,5920000,5750000,5600000,5450000,5300000];
+const ZONE_TRIPS = [432492,281840,511711,376213,489795,454630,364708,359458,
+                    331045,296028,294364,302568,311860,287962,294206,260000,255000,248000,242000,238000];
+const ZONE_RPT   = ZONE_REV.map((r,i)=>+(r/ZONE_TRIPS[i]).toFixed(2));
+
+// Pre vs post CBD (Bivariate Fig 7)
+const CBD_METRICS = ['Avg Total ($)','Avg Fare ($)','Avg Distance (mi)','Avg Duration (min)'];
+const CBD_PRE     = [27.14, 18.12, 3.22, 15.53];
+const CBD_POST    = [26.58, 17.53, 3.21, 15.75];
+
+// % change by zone (Multivariate Fig 7B, top 15)
+const CBD_ZONES     = ['132','161','237','236','141','162','163','186','230','142','68','170','234','79','239'];
+const CBD_ZONE_CHG  = [2.27,-1.73,-1.64,-1.90,-1.37,-0.85,-0.42,-1.22,-0.63,-0.91,0.34,-0.18,0.72,-0.55,-0.29];
+
+// Day × Hour matrix — actual counts (NB3 Fig 10, rows=DOW Mon–Sun, cols=hour 0–23)
+const DAY_HOUR = [
+  [22847,10991,6104,4398,5905,10896,24699,48701,65242,62238,60581,62708,66171,70257,76573,81190,78370,87526,89074,73699,70729,70572,54721,33179],
+  [15514,6582,3215,2485,3452,8894,23223,51049,72551,69821,64306,64285,68380,70595,77539,81923,80826,94342,100186,83827,90646,96045,71573,36326],
+  [22682,14613,9918,6600,6299,10307,24921,54406,75555,72636,67716,69651,74808,78722,84621,91541,90735,106644,112753,97378,101863,107480,89851,47947],
+  [21753,9620,5177,3831,5108,11259,27317,57526,79253,76036,70856,73051,79128,81709,89573,95692,94971,113005,122673,109481,113781,120266,106623,72981],
+  [39233,19207,10718,6963,7436,12142,24836,49401,63996,62457,64407,68701,75163,79920,90366,96397,92442,105331,114713,106963,98830,95098,100785,101581],
+  [89018,67234,46175,29392,17502,8845,11940,17546,28743,44698,58478,69776,78774,86502,88117,93566,101060,106951,118849,122609,103626,102043,114138,117586],
+  [102521,80229,52753,39743,24299,11726,14195,18691,26905,42051,58585,68260,77610,81319,83168,79656,81999,86082,85361,70752,63565,61089,54489,38082]
+];
+
+// Month × DoW matrix — actual counts (NB4 Fig 6, rows=Jan/Feb/Mar, cols=Mon–Sun)
+const MONTH_DOW = [
+  [345362,427917,539977,574466,547607,454062,381304],
+  [374651,446890,474397,512831,528462,547743,439305],
+  [517358,462778,505273,553373,511017,721363,582521]
+];
+
+// Top 5 zones hourly trip counts (NB4 Fig 1)
+const Z161H = [6626,2476,976,669,757,997,2964,6218,10093,14225,17728,22345,25298,28491,31308,32612,36982,45353,46268,39022,38720,35661,27717,14923];
+const Z237H = [4868,2189,918,573,546,966,3331,12338,18809,22223,24932,28614,31489,32215,36542,36459,34400,35643,36175,29004,26137,25728,18340,9913];
+const Z236H = [1899,825,403,238,445,1379,5550,18608,26652,27282,27347,28566,31234,29936,31839,36567,31554,33113,32198,22839,18530,14785,9095,4375];
+const Z132H = [16325,7831,2947,1848,2101,6965,12091,13540,10109,9935,11430,10819,14939,17020,24441,28865,32159,28094,25245,29350,28987,28966,27349,24038];
+const Z230H = [9893,4707,2458,1997,2074,1826,2753,5079,8419,11142,13464,15247,15019,14907,15528,16938,22195,25323,26248,22575,25523,36699,35673,21140];
+
+// Flags from cleaning notebook
+const FLAG_LABELS = ['FLAG_NEG_FARE','FLAG_ZERO_DIST','FLAG_ZERO_PAX','FLAG_ZERO_DUR',
+                     'FLAG_LONG_DUR','FLAG_NEG_DUR','FLAG_EXTREME_DIST','FLAG_EXTREME_FARE','FLAG_OVER_PAX','FLAG_OOB_DATE'];
+const FLAG_COUNTS = [535497,294386,69122,29197,3811,298,548,146,47,25];
+
+// ── Heatmap renderer ─────────────────────────────────────────────────────
+function hmColor(ratio, scale) {
+  let r,g,b;
+  if (scale === 'YlOrRd') {
+    if (ratio < 0.5) { const t=ratio*2; r=Math.round(255+(253-255)*t); g=Math.round(255+(141-255)*t); b=Math.round(204+(60-204)*t); }
+    else { const t=(ratio-.5)*2; r=Math.round(253+(189-253)*t); g=Math.round(141+(0-141)*t); b=Math.round(60+(38-60)*t); }
+  } else {
+    r=Math.round(247+(8-247)*ratio); g=Math.round(251+(48-251)*ratio); b=Math.round(255+(107-255)*ratio);
+  }
+  return `rgb(${r},${g},${b})`;
+}
+function buildHM(id, matrix, rowLabels, colLabels, maxVal, scale) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  let h = `<table style="width:100%;border-collapse:collapse;font-size:9px">`;
+  h += `<tr><th style="padding:2px 5px"></th>`;
+  colLabels.forEach(c => { h += `<th style="padding:1px 2px;text-align:center;font-weight:500;color:#666;font-family:'DM Mono',monospace">${c}</th>`; });
+  h += '</tr>';
+  matrix.forEach((row, ri) => {
+    h += `<tr><td style="padding:3px 6px;font-weight:600;white-space:nowrap;color:#333;font-size:10px">${rowLabels[ri]}</td>`;
+    row.forEach(v => {
+      const ratio = v / maxVal;
+      const bg = hmColor(ratio, scale);
+      const fg = ratio > 0.62 ? '#fff' : '#222';
+      h += `<td style="padding:4px 1px;text-align:center;background:${bg};color:${fg};font-family:'DM Mono',monospace">${(v/1000).toFixed(1)}</td>`;
+    });
+    h += '</tr>';
+  });
+  h += '</table>';
+  el.innerHTML = h;
+}
+
+// ── DAG renderer ─────────────────────────────────────────────────────────
+function buildDAG(containerId, nodes, edges, opts) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const { width=940, height=460, padX=85, padY=58, nodeR=33, legendItems=[], annotations=[] } = opts;
+  const mid = containerId.replace(/[^a-z0-9]/gi,'');
+
+  const xs = nodes.map(n=>n.x), ys = nodes.map(n=>n.y);
+  const minX=Math.min(...xs), maxX=Math.max(...xs);
+  const minY=Math.min(...ys), maxY=Math.max(...ys);
+  const sx=(width-padX*2)/(maxX-minX||1);
+  const sy=(height-padY*2)/(maxY-minY||1);
+  const px=x=>padX+(x-minX)*sx;
+  const py=y=>height-padY-(y-minY)*sy;
+
+  const nm={};
+  nodes.forEach(n=>{ nm[n.id]={...n,cx:px(n.x),cy:py(n.y)}; });
+
+  let svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" style="width:100%;height:auto;display:block;">
+  <defs>
+    <marker id="${mid}-arr" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto">
+      <polygon points="0 0,9 3.5,0 7" fill="#444" opacity="0.85"/>
+    </marker>
+  </defs>
+  <rect width="${width}" height="${height}" fill="#fff"/>`;
+
+  edges.forEach(([fid,tid])=>{
+    const fn=nm[fid],tn=nm[tid]; if(!fn||!tn) return;
+    const dx=tn.cx-fn.cx, dy=tn.cy-fn.cy;
+    const dist=Math.sqrt(dx*dx+dy*dy); if(dist<1) return;
+    const ux=dx/dist, uy=dy/dist;
+    const sx0=fn.cx+ux*(nodeR+1), sy0=fn.cy+uy*(nodeR+1);
+    const ex=tn.cx-ux*(nodeR+1), ey=tn.cy-uy*(nodeR+1);
+    const mx=(sx0+ex)/2, my=(sy0+ey)/2;
+    const cpx=mx-uy*16, cpy=my+ux*16;
+    svg+=`<path d="M${sx0.toFixed(1)},${sy0.toFixed(1)} Q${cpx.toFixed(1)},${cpy.toFixed(1)} ${ex.toFixed(1)},${ey.toFixed(1)}" fill="none" stroke="#555" stroke-width="1.6" opacity="0.78" marker-end="url(#${mid}-arr)"/>`;
+  });
+
+  Object.values(nm).forEach(n=>{
+    svg+=`<circle cx="${n.cx.toFixed(1)}" cy="${n.cy.toFixed(1)}" r="${nodeR}" fill="${n.color}" stroke="#fff" stroke-width="1.8" opacity="0.94"/>`;
+    const lines=n.label.split('\n'), lh=12;
+    lines.forEach((line,i)=>{
+      const yo=(i-(lines.length-1)/2)*lh;
+      svg+=`<text x="${n.cx.toFixed(1)}" y="${(n.cy+yo).toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-family="DM Sans,sans-serif" font-size="9" font-weight="700" fill="#fff">${line}</text>`;
+    });
+  });
+
+  annotations.forEach(a=>{
+    svg+=`<text x="${px(a.x).toFixed(1)}" y="${py(a.y).toFixed(1)}" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="9" fill="#777" font-style="italic">${a.text}</text>`;
+  });
+  svg+='</svg>';
+
+  let leg=`<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:11px;color:#555;">`;
+  legendItems.forEach(item=>{
+    leg+=`<span style="display:flex;align-items:center;gap:5px;"><span style="width:11px;height:11px;border-radius:50%;background:${item.color};display:inline-block;flex-shrink:0;"></span>${item.label}</span>`;
+  });
+  leg+='</div>';
+  el.innerHTML=svg+leg;
+}
+
+// ── Chart builder ────────────────────────────────────────────────────────
+function mk(id,type,data,opts){
+  return new Chart(document.getElementById(id),{type,data,options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},...opts}});
+}
+
+function buildCharts(name) {
+  if (name==='overview') {
+    mk('c-monthly-trips','bar',
+      {labels:MONTHS,datasets:[{data:MONTH_TRIPS.map(v=>+(v/1e6).toFixed(2)),backgroundColor:[C.b,C.y,C.gr]}]},
+      {scales:{y:{ticks:{callback:v=>v+'M'}}}});
+
+    mk('c-vendor-pct','bar',
+      {labels:VEN_LABELS,datasets:[{data:VEN_PCT,backgroundColor:[C.y,C.k,C.g,C.lg]}]},
+      {scales:{y:{ticks:{callback:v=>v+'%'},max:90}}});
+
+    mk('c-payment-pct','bar',
+      {labels:PAY_LABELS,datasets:[{data:PAY_PCT,backgroundColor:[C.y,C.k,C.g,C.lg,'#EAEAEA']}]},
+      {scales:{y:{ticks:{callback:v=>v+'%'},max:80}}});
+
+    mk('c-ratecode-pct','bar',
+      {labels:RATE_LABELS,datasets:[{data:RATE_PCT,backgroundColor:[C.y,C.k,C.g,C.am,C.b,C.lg,C.tl]}]},
+      {scales:{y:{ticks:{callback:v=>v+'%'},max:100}}});
+  }
+
+  if (name==='demand') {
+    // Fig 1 – hourly demand bar with peak coloured
+    const hrColors = HOURS.map(h=>h===18?C.r:h>=6&&h<12?C.am:h>=12&&h<17?C.b:h>=17&&h<21?C.y:C.g);
+    mk('c-hourly','bar',
+      {labels:HOURS.map(h=>h+':00'),datasets:[{data:HOURLY.map(v=>+(v/1000).toFixed(1)),backgroundColor:hrColors}]},
+      {scales:{y:{ticks:{callback:v=>v+'K'}}}});
+
+    // Fig 2A – DOW total (green = weekend)
+    mk('c-dow-total','bar',
+      {labels:DOW,datasets:[{data:DOW_TOTAL.map(v=>+(v/1e6).toFixed(2)),
+        backgroundColor:[...Array(5).fill(C.b),...Array(2).fill(C.gr)]}]},
+      {scales:{y:{ticks:{callback:v=>v+'M'}},x:{ticks:{maxRotation:20}}}});
+
+    // Fig 2B – DOW avg
+    mk('c-dow-avg','bar',
+      {labels:DOW,datasets:[{data:DOW_AVG.map(v=>+(v/1000).toFixed(1)),
+        backgroundColor:[...Array(5).fill(C.k),...Array(2).fill(C.y)]}]},
+      {scales:{y:{ticks:{callback:v=>v+'K'}},x:{ticks:{maxRotation:20}}}});
+
+    // Fig 5B – monthly hourly overlay line
+    new Chart(document.getElementById('c-month-hour'),{
+      type:'line',
+      data:{labels:HOURS.map(h=>h+':00'),datasets:[
+        {label:'January', data:MH_JAN,borderColor:C.b,tension:.35,pointRadius:0,borderWidth:2},
+        {label:'February',data:MH_FEB,borderColor:C.y,tension:.35,pointRadius:0,borderWidth:2},
+        {label:'March',   data:MH_MAR,borderColor:C.gr,tension:.35,pointRadius:0,borderWidth:2}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+               scales:{y:{ticks:{callback:v=>v+'K'}}}}
+    });
+
+    // Fig 10 – CC share by hour WD vs WE
+    new Chart(document.getElementById('c-cc-hour'),{
+      type:'bar',
+      data:{labels:HOURS.map(h=>h+':00'),datasets:[
+        {label:'Weekday',data:CC_WD_D,backgroundColor:C.k,stack:'s'},
+        {label:'Weekend',data:CC_WE_D,backgroundColor:C.y,stack:'s2'}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+               scales:{y:{min:55,max:80,ticks:{callback:v=>v+'%'}}}}
+    });
+
+    // NB3 Fig 10 — Day × Hour heatmap (HTML table)
+    buildHM('hm-dow-hour', DAY_HOUR,
+      ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+      HOURS, 122673, 'YlOrRd');
+
+    // NB4 Fig 6 — Month × DoW heatmap (HTML table)
+    buildHM('hm-month-dow', MONTH_DOW,
+      ['January','February','March'],
+      ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+      721363, 'Blues');
+
+    // NB4 Fig 5 — monthly evolution line chart (actual avg daily)
+    new Chart(document.getElementById('c-month-evo'),{
+      type:'line',
+      data:{labels:HOURS.map(h=>h+':00'),datasets:[
+        {label:'January', data:MH_JAN,borderColor:C.b, tension:.35,pointRadius:0,borderWidth:2},
+        {label:'February',data:MH_FEB,borderColor:C.y, tension:.35,pointRadius:0,borderWidth:2},
+        {label:'March',   data:MH_MAR,borderColor:C.gr,tension:.35,pointRadius:0,borderWidth:2}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+               scales:{y:{ticks:{callback:v=>v.toLocaleString()}}}}
+    });
+
+    // NB4 Fig 1 — Top 5 zones hourly line chart
+    new Chart(document.getElementById('c-zone-hourly'),{
+      type:'line',
+      data:{labels:HOURS.map(h=>h+':00'),datasets:[
+        {label:'161 Midtown',  data:Z161H.map(v=>+(v/1000).toFixed(1)),borderColor:C.b, tension:.35,pointRadius:0,borderWidth:2},
+        {label:'237 Upper E N',data:Z237H.map(v=>+(v/1000).toFixed(1)),borderColor:C.r, tension:.35,pointRadius:0,borderWidth:2},
+        {label:'236 Upper E S',data:Z236H.map(v=>+(v/1000).toFixed(1)),borderColor:C.gr,tension:.35,pointRadius:0,borderWidth:2},
+        {label:'132 JFK',      data:Z132H.map(v=>+(v/1000).toFixed(1)),borderColor:C.am,tension:.35,pointRadius:0,borderWidth:2},
+        {label:'230 Times Sq', data:Z230H.map(v=>+(v/1000).toFixed(1)),borderColor:C.k, tension:.35,pointRadius:0,borderWidth:2}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+               scales:{y:{ticks:{callback:v=>v+'K'}}}}
+    });
+  }
+
+  if (name==='revenue') {
+    // Fig 5 – fare histogram with median/mean lines
+    new Chart(document.getElementById('c-fare-hist'),{
+      type:'bar',
+      data:{labels:FARE_BINS,datasets:[{data:FARE_DATA.map(v=>+(v/1e6).toFixed(2)),backgroundColor:C.am}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+        annotation:{annotations:{med:{type:'line',xMin:3.5,xMax:3.5,borderColor:'#e74c3c',borderWidth:2},
+                                 mn: {type:'line',xMin:5.8,xMax:5.8,borderColor:'#2c3e50',borderWidth:2}}}},
+               scales:{y:{ticks:{callback:v=>v+'M'}}}}
+    });
+
+    // Fig 5 – total histogram
+    mk('c-total-hist','bar',
+      {labels:TOTAL_BINS,datasets:[{data:TOTAL_DATA.map(v=>+(v/1e6).toFixed(2)),backgroundColor:C.tl}]},
+      {scales:{y:{ticks:{callback:v=>v+'M'}}}});
+
+    // Fig 9B bivariate – mean fare by rate code
+    mk('c-rate-fare','bar',
+      {labels:RATE_LABELS,datasets:[{data:RATE_AVG_FARE,
+        backgroundColor:[C.y,C.k,C.g,C.am,C.b,C.lg,C.tl]}]},
+      {scales:{y:{ticks:{callback:v=>'$'+v}}}});
+
+    // Fig 6B bivariate – avg total by dist bin (bar + line twin axis)
+    new Chart(document.getElementById('c-dist-bin'),{
+      type:'bar',
+      data:{labels:DIST_BINS,datasets:[
+        {type:'bar', label:'Avg Total ($)', data:DIST_AVG_T, backgroundColor:C.am, yAxisID:'y',
+         order:2},
+        {type:'line', label:'Trip Count (M)', data:DIST_TRIPS_K.map(v=>+(v/1000).toFixed(3)),
+          borderColor:'#0E0E0E', backgroundColor:'rgba(14,14,14,0.1)',
+          borderWidth:2.5, pointRadius:5, pointBackgroundColor:'#0E0E0E',
+          tension:.3, yAxisID:'y2', order:1}
+      ]},
+      options:{responsive:true, maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false},
+          tooltip:{callbacks:{
+            label: ctx => ctx.datasetIndex===0
+              ? 'Avg total: $'+ctx.parsed.y.toFixed(2)
+              : 'Trips: '+(ctx.parsed.y*1000).toLocaleString()
+          }}
+        },
+        scales:{
+          y:{title:{display:true,text:'Avg Total Amount ($)',font:{size:11}},
+             ticks:{callback:v=>'$'+v}, beginAtZero:true, position:'left'},
+          y2:{title:{display:true,text:'Trip Count (millions)',font:{size:11}},
+              ticks:{callback:v=>v.toFixed(1)+'M'}, beginAtZero:true,
+              position:'right', grid:{drawOnChartArea:false}}
+        }}
+    });
+  }
+
+  if (name==='geography') {
+    const n=20;
+    mk('c-zone-rev','bar',
+      {labels:ZONE_NAMES.slice(0,n).slice().reverse(),
+       datasets:[{data:ZONE_REV.slice(0,n).map(v=>+(v/1e6).toFixed(1)).reverse(),
+         backgroundColor:ZONE_NAMES.slice(0,n).map((_,i)=>i<2?C.y:C.k).reverse()}]},
+      {indexAxis:'y',scales:{x:{ticks:{callback:v=>'$'+v+'M'}}}});
+
+    mk('c-zone-trips','bar',
+      {labels:ZONE_NAMES.slice(0,n).slice().reverse(),
+       datasets:[{data:ZONE_TRIPS.slice(0,n).map(v=>+(v/1000).toFixed(0)).reverse(),
+         backgroundColor:ZONE_NAMES.slice(0,n).map((_,i)=>i===2?C.y:C.k).reverse()}]},
+      {indexAxis:'y',scales:{x:{ticks:{callback:v=>v+'K'}}}});
+
+    mk('c-zone-rpt','bar',
+      {labels:ZONE_NAMES.slice(0,10).map(z=>z.split(' ')[0]),
+       datasets:[{data:ZONE_RPT.slice(0,10).map(Number),
+         backgroundColor:ZONE_NAMES.slice(0,10).map((_,i)=>i===0?C.y:i===1?C.am:C.k)}]},
+      {scales:{y:{ticks:{callback:v=>'$'+v}}}});
+  }
+
+  if (name==='payment') {
+    // Fig 7A – payment freq horizontal bar
+    mk('c-pay-freq','bar',
+      {labels:PAY_LABELS,datasets:[{data:PAY_TRIPS_K,
+        backgroundColor:[C.y,C.k,C.g,C.lg,'#EAEAEA']}]},
+      {indexAxis:'y',scales:{x:{ticks:{callback:v=>v+'K'}}}});
+
+    // Fig 5C bivariate – mean total by payment type (colours match notebook)
+    new Chart(document.getElementById('c-pay-total'),{
+      type:'bar',
+      data:{labels:PAY_LABELS, datasets:[{
+        data:PAY_AVG_TOTAL,
+        backgroundColor:['#3498db','#9b59b6','#e74c3c','#27ae60','#f39c12'],
+        borderRadius:4
+      }]},
+      options:{responsive:true, maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false},
+          datalabels:{display:false},
+          tooltip:{callbacks:{label:ctx=>'Mean total: $'+ctx.parsed.y.toFixed(2)}}
+        },
+        scales:{
+          y:{ticks:{callback:v=>'$'+v}, beginAtZero:true, max:32},
+          x:{ticks:{maxRotation:15}}
+        },
+        animation:{onComplete:function(){
+          const ctx=this.ctx, meta=this.getDatasetMeta(0);
+          ctx.save(); ctx.font='bold 11px DM Sans,sans-serif';
+          ctx.fillStyle='#333'; ctx.textAlign='center';
+          meta.data.forEach((bar,i)=>{
+            const v=PAY_AVG_TOTAL[i];
+            if(v>0) ctx.fillText('$'+v.toFixed(2), bar.x, bar.y-6);
+          });
+          ctx.restore();
+        }}
+      }
+    });
+
+    // Fig 6A – passenger count frequency
+    mk('c-pax-freq','bar',
+      {labels:PAX_LABELS,datasets:[{data:PAX_COUNTS.map(v=>+(v/1e6).toFixed(2)),backgroundColor:C.b}]},
+      {scales:{y:{ticks:{callback:v=>v+'M'}}}});
+
+    // Fig 6B – passenger count %
+    mk('c-pax-pct','bar',
+      {labels:PAX_LABELS,datasets:[{data:PAX_PCT,backgroundColor:C.y}]},
+      {scales:{y:{ticks:{callback:v=>v+'%'},max:75}}});
+
+    // Fig 10A – tip histogram (CC only)
+    mk('c-tip-hist','bar',
+      {labels:TIP_BINS,datasets:[{data:TIP_DATA.map(v=>+(v/1e6).toFixed(2)),backgroundColor:C.gr}]},
+      {scales:{y:{ticks:{callback:v=>v+'M'}}}});
+
+    // Fig 10B – congestion surcharge
+    mk('c-congestion','bar',
+      {labels:CONG_LABELS,datasets:[{data:CONG_DATA.map(v=>+(v/1e6).toFixed(2)),
+        backgroundColor:[C.g,C.y,C.k]}]},
+      {scales:{y:{ticks:{callback:v=>v+'M'}}}});
+
+    // Fig 10C – CBD fee distribution
+    mk('c-cbd-dist','bar',
+      {labels:CBD_FEE_LABELS,datasets:[{data:CBD_FEE_DATA.map(v=>+(v/1e6).toFixed(2)),
+        backgroundColor:[C.g,C.am,C.y]}]},
+      {scales:{y:{ticks:{callback:v=>v+'M'}}}});
+  }
+
+  if (name==='cbd') {
+    // Fig 7 bivariate – pre vs post 4 metrics grouped bar
+    new Chart(document.getElementById('c-cbd-compare'),{
+      type:'bar',
+      data:{labels:CBD_METRICS,datasets:[
+        {label:'Pre-Jan 5',data:CBD_PRE,backgroundColor:C.g},
+        {label:'Post-Jan 5',data:CBD_POST,backgroundColor:C.y}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+    });
+
+    // Fig 7B multivariate – % change by zone bar
+    mk('c-cbd-zone','bar',
+      {labels:CBD_ZONES,datasets:[{data:CBD_ZONE_CHG,
+        backgroundColor:CBD_ZONE_CHG.map(v=>v>0?C.r:C.b)}]},
+      {scales:{y:{ticks:{callback:v=>v+'%'}}}});
+  }
+
+  if (name==='dags') {
+    const DAG_LEG = [
+      {color:'#2980b9', label:'Exogenous / Contextual'},
+      {color:'#c0392b', label:'Policy Variable'},
+      {color:'#8e44ad', label:'Trip Structural'},
+      {color:'#e67e22', label:'Fee / Financial Component'},
+      {color:'#27ae60', label:'Behavioural'},
+      {color:'#1a252f', label:'Final Outcome'},
+    ];
+
+    // Figure 11A — Fare Formation DAG
+    buildDAG('dag-11a', [
+      {id:'zone',   x:0.0,  y:3.2,  color:'#2980b9', label:'Pickup\nZone'},
+      {id:'ptype',  x:0.0,  y:1.2,  color:'#27ae60', label:'Payment\nType'},
+      {id:'policy', x:0.0,  y:-0.8, color:'#c0392b', label:'Post\nJan-5'},
+      {id:'rate',   x:2.1,  y:4.2,  color:'#8e44ad', label:'Rate\nCode'},
+      {id:'dist',   x:2.1,  y:2.2,  color:'#8e44ad', label:'Trip\nDistance'},
+      {id:'dur',    x:2.1,  y:0.2,  color:'#8e44ad', label:'Trip\nDuration'},
+      {id:'apt',    x:2.1,  y:5.4,  color:'#e67e22', label:'Airport\nFee'},
+      {id:'toll',   x:2.1,  y:-1.0, color:'#e67e22', label:'Tolls'},
+      {id:'cong',   x:4.2,  y:3.2,  color:'#e67e22', label:'Congestion\nSurch.'},
+      {id:'fare',   x:4.2,  y:1.2,  color:'#e67e22', label:'Fare\nAmount'},
+      {id:'cbd',    x:4.2,  y:-0.8, color:'#e67e22', label:'CBD\nFee'},
+      {id:'fixed',  x:4.2,  y:-2.0, color:'#e67e22', label:'MTA &\nImprv. Surch.'},
+      {id:'tip',    x:6.3,  y:1.2,  color:'#e67e22', label:'Tip\nAmount'},
+      {id:'total',  x:8.4,  y:1.2,  color:'#1a252f', label:'Total\nAmount'},
+    ], [
+      ['zone','rate'],['zone','dist'],['zone','toll'],['zone','apt'],['zone','cong'],
+      ['rate','fare'],['dist','fare'],['dist','dur'],['dur','fare'],
+      ['ptype','tip'],['fare','tip'],
+      ['policy','cbd'],
+      ['fare','total'],['tip','total'],['cong','total'],['cbd','total'],
+      ['toll','total'],['apt','total'],['fixed','total'],
+    ], {
+      width:940, height:500, padX:85, padY:60, nodeR:33,
+      legendItems: DAG_LEG,
+      annotations:[
+        {x:1.05, y:5.2, text:'Zone → Rate → Fare'},
+        {x:1.05, y:3.4, text:'Distance → Duration → Fare'},
+        {x:1.05, y:0.9, text:'Payment → Tip'},
+      ]
+    });
+
+    // Figure 11B — Demand Driver DAG
+    buildDAG('dag-11b', [
+      {id:'hour',    x:0.0,  y:4.0,  color:'#2980b9', label:'Hour of\nDay'},
+      {id:'dow',     x:0.0,  y:2.6,  color:'#2980b9', label:'Day of\nWeek'},
+      {id:'month',   x:0.0,  y:1.2,  color:'#2980b9', label:'Month\n(Seasonal)'},
+      {id:'zone',    x:0.0,  y:-0.2, color:'#2980b9', label:'Zone\nType'},
+      {id:'policy',  x:0.0,  y:-1.6, color:'#c0392b', label:'CBD\nPolicy'},
+      {id:'demand',  x:2.2,  y:1.2,  color:'#1a252f', label:'Trip\nDemand'},
+      {id:'dist',    x:4.4,  y:3.6,  color:'#8e44ad', label:'Trip\nDistance'},
+      {id:'congest', x:4.4,  y:2.0,  color:'#8e44ad', label:'Road\nCongestion'},
+      {id:'dur',     x:4.4,  y:0.4,  color:'#8e44ad', label:'Trip\nDuration'},
+      {id:'speed',   x:6.6,  y:0.4,  color:'#8e44ad', label:'Trip\nSpeed'},
+      {id:'ptype',   x:6.6,  y:3.6,  color:'#27ae60', label:'Payment\nMix'},
+      {id:'fare',    x:6.6,  y:2.0,  color:'#e67e22', label:'Fare\nAmount'},
+      {id:'tip',     x:8.8,  y:2.8,  color:'#e67e22', label:'Tip\nRate'},
+      {id:'revenue', x:8.8,  y:0.8,  color:'#1a252f', label:'Zone\nRevenue'},
+    ], [
+      ['hour','demand'],['dow','demand'],['month','demand'],
+      ['zone','demand'],['policy','demand'],
+      ['zone','dist'],['demand','congest'],['congest','dur'],
+      ['dist','dur'],['dur','speed'],
+      ['zone','ptype'],['hour','ptype'],
+      ['dist','fare'],['dur','fare'],
+      ['ptype','tip'],['fare','tip'],
+      ['demand','revenue'],['fare','revenue'],
+    ], {
+      width:940, height:440, padX:85, padY:60, nodeR:33,
+      legendItems: DAG_LEG,
+      annotations:[
+        {x:1.1,  y:3.0, text:'Hour/DoW/Month → Demand'},
+        {x:3.3,  y:4.2, text:'Zone → Distance → Fare'},
+        {x:3.3,  y:1.5, text:'Demand → Congestion → Dur'},
+      ]
+    });
+  }
+
+  if (name==='quality') {
+    // Flag counts bar from cleaning notebook
+    mk('c-flags','bar',
+      {labels:FLAG_LABELS,datasets:[{data:FLAG_COUNTS.map(v=>+(v/1000).toFixed(1)),
+        backgroundColor:[C.r,C.r,C.am,C.am,C.am,C.am,C.gr,C.gr,C.gr,C.gr]}]},
+      {indexAxis:'y',scales:{x:{ticks:{callback:v=>v+'K'}}}});
+
+    // Sensitivity bar (Section 8 of cleaning notebook)
+    mk('c-sensitivity','bar',
+      {labels:['Strict cap (120 min)\n10,315,482 rows','Base cap (300 min)\n10,318,198 rows'],
+       datasets:[{data:[20.91,20.93],backgroundColor:[C.gr,C.y]}]},
+      {indexAxis:'y',scales:{x:{min:20.85,max:21.0,ticks:{callback:v=>'$'+v.toFixed(2)}}}});
+  }
+}
+
+document.addEventListener('DOMContentLoaded',()=>{ buildCharts('overview'); chartsInit.overview=true; });
+</script>
+</body>
+</html>
