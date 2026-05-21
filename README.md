@@ -27,7 +27,6 @@ This project delivers a full-scale data quality assessment, cleaning pipeline, e
 
 ## Dataset Summary
 
-sha256:1fb0b924dfedbf0589aed37085b43a5764aff040d55ba5c2dface6f007f266dd
 
 | Metric | Value |
 |--------|-------|
