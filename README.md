@@ -19,13 +19,15 @@ This project delivers a full-scale data quality assessment, cleaning pipeline, e
 | `03_Bivariate_EDA.ipynb` | Two-variable relationships and correlations (12 figures) |
 | `04_Multivariate_EDA.ipynb` | Three-or-more variable interactions and causal DAGs (9 figures) |
 | `dashboard.html` | Interactive executive BI dashboard (opens in any browser) |
-| `yellow_taxi_clean.parquet` | Clean dataset — 10.32M rows, 33 columns |
+| `Project_Master_Clean.parquet` | Clean dataset — 10.32M rows, 33 columns |
 | `OW_Yellow_Caps_Executive_Insights_Report.docx` | Written executive report |
 | `OW_Yellow_Caps_Technical_Insights_Report.docx` | Written Technical report |
 
 ---
 
 ## Dataset Summary
+
+sha256:1fb0b924dfedbf0589aed37085b43a5764aff040d55ba5c2dface6f007f266dd
 
 | Metric | Value |
 |--------|-------|
